@@ -31,6 +31,10 @@ class PaperyaWidgetProvider : AppWidgetProvider() {
             views.setTextColor(R.id.widget_note_preview, theme.bodyColor.toInt())
             views.setTextColor(R.id.widget_updated, theme.mutedColor.toInt())
             views.setTextColor(R.id.widget_open_app, theme.accentColor.toInt())
+            views.setTextColor(R.id.widget_action_checklist, theme.accentColor.toInt())
+            views.setTextColor(R.id.widget_action_photo, theme.accentColor.toInt())
+            views.setTextColor(R.id.widget_action_audio, theme.accentColor.toInt())
+            views.setTextColor(R.id.widget_action_draw, theme.accentColor.toInt())
             views.setTextViewText(R.id.widget_note_title, note?.title?.ifBlank { "A little idea" } ?: "Your notes, beautifully kept")
             views.setTextViewText(
                 R.id.widget_note_preview,
@@ -62,6 +66,23 @@ class PaperyaWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_new_note, newNotePending)
+
+            listOf(
+                R.id.widget_action_checklist to "checklist",
+                R.id.widget_action_photo to "photo",
+                R.id.widget_action_audio to "audio",
+                R.id.widget_action_draw to "draw"
+            ).forEachIndexed { index, (viewId, action) ->
+                val actionIntent = Intent(context, MainActivity::class.java).apply {
+                    putExtra(MainActivity.EXTRA_WIDGET_ACTION, action)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+                val actionPending = PendingIntent.getActivity(
+                    context, widgetId * 10 + 3 + index, actionIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                views.setOnClickPendingIntent(viewId, actionPending)
+            }
             manager.updateAppWidget(widgetId, views)
         }
     }

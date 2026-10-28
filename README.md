@@ -14,7 +14,7 @@ NoteFlow is a native Android note-taking prototype inspired by the broad workflo
 - Checklist, bullet and numbered-list helpers, emoji/stickers and file attachments.
 - Ready-made and user-created labels with a dedicated label manager/page flow.
 - Reminders with quick scheduling for one hour or the next morning and Android notifications.
-- Resizable home-screen widget for the latest note and creating a note, with 8 selectable color-gradient themes.
+- Resizable home-screen widget for the latest note, new notes, checklists, image/audio attachments and sketches, with 8 selectable color-gradient themes.
 - JSON backup import/export with ID-and-timestamp merge.
 - Google Drive user-triggered sync using Google Identity and the Drive API drive.file scope.
 

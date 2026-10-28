@@ -73,7 +73,7 @@ fun WidgetCustomizationScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 TextButton(onClick = { onApply(previewThemeId) }) {
-                    Text(uiText(isPortuguese, "Adicionar", "Apply"), fontWeight = FontWeight.SemiBold)
+                    Text(uiText(isPortuguese, "Aplicar", "Apply"), fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -90,15 +90,15 @@ fun WidgetCustomizationScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(selectedTheme.cardColor)),
-                    border = BorderStroke(1.dp, Color(selectedTheme.borderColor)),
+                    colors = CardDefaults.cardColors(containerColor = Color(selectedTheme.cardColor.toInt())),
+                    border = BorderStroke(1.dp, Color(selectedTheme.borderColor.toInt())),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(Modifier.padding(10.dp)) {
                         Row(
                             Modifier.fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Brush.horizontalGradient(listOf(Color(selectedTheme.headerStart), Color(selectedTheme.headerEnd))))
+                                .background(Brush.horizontalGradient(listOf(Color(selectedTheme.headerStart.toInt()), Color(selectedTheme.headerEnd.toInt()))))
                                 .padding(horizontal = 12.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -116,12 +116,12 @@ fun WidgetCustomizationScreen(
                             modifier = Modifier.padding(start = 8.dp, top = 13.dp),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(selectedTheme.titleColor)
+                            color = Color(selectedTheme.titleColor.toInt())
                         )
                         Text(
                             uiText(isPortuguese, "Guarda pensamentos, listas e pequenos planos num só lugar.", "Capture thoughts, lists and little plans in one place."),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            color = Color(selectedTheme.bodyColor),
+                            color = Color(selectedTheme.bodyColor.toInt()),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Row(
@@ -129,11 +129,11 @@ fun WidgetCustomizationScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.NoteAdd, contentDescription = null, tint = Color(selectedTheme.accentColor), modifier = Modifier.size(23.dp))
-                            Icon(Icons.Default.TaskAlt, contentDescription = null, tint = Color(selectedTheme.accentColor), modifier = Modifier.size(23.dp))
-                            Icon(Icons.Default.Image, contentDescription = null, tint = Color(selectedTheme.accentColor), modifier = Modifier.size(23.dp))
-                            Icon(Icons.Default.Mic, contentDescription = null, tint = Color(selectedTheme.accentColor), modifier = Modifier.size(23.dp))
-                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(selectedTheme.accentColor), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.NoteAdd, contentDescription = null, tint = Color(selectedTheme.accentColor.toInt()), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.TaskAlt, contentDescription = null, tint = Color(selectedTheme.accentColor.toInt()), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.Image, contentDescription = null, tint = Color(selectedTheme.accentColor.toInt()), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.Mic, contentDescription = null, tint = Color(selectedTheme.accentColor.toInt()), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(selectedTheme.accentColor.toInt()), modifier = Modifier.size(23.dp))
                         }
                     }
                 }
@@ -160,13 +160,13 @@ fun WidgetCustomizationScreen(
                                         if (isSelected) 2.dp else 1.dp,
                                         if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFFE5E7EE)
                                     ),
-                                    colors = CardDefaults.cardColors(containerColor = Color(theme.cardColor)),
+                                    colors = CardDefaults.cardColors(containerColor = Color(theme.cardColor.toInt())),
                                     elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 3.dp else 0.dp)
                                 ) {
                                     Column {
                                         Box(
                                             Modifier.fillMaxWidth().height(36.dp)
-                                                .background(Brush.horizontalGradient(listOf(Color(theme.headerStart), Color(theme.headerEnd))))
+                                                .background(Brush.horizontalGradient(listOf(Color(theme.headerStart.toInt()), Color(theme.headerEnd.toInt()))))
                                         )
                                         Row(
                                             Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 9.dp),
@@ -174,10 +174,10 @@ fun WidgetCustomizationScreen(
                                         ) {
                                             Column(Modifier.weight(1f)) {
                                                 Text(if (isPortuguese) theme.namePortuguese else theme.name,
-                                                    color = Color(theme.titleColor), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                                    color = Color(theme.titleColor.toInt()), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                                                 Text(
                                                     if (isSelected) uiText(isPortuguese, "Selecionado", "Selected") else uiText(isPortuguese, "Pré-visualizar", "Preview"),
-                                                    color = Color(theme.mutedColor),
+                                                    color = Color(theme.mutedColor.toInt()),
                                                     style = MaterialTheme.typography.labelSmall
                                                 )
                                             }

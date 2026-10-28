@@ -45,7 +45,10 @@ import kotlinx.coroutines.withContext
 enum class DriveOperation { SYNC, RESTORE }
 
 class MainActivity : ComponentActivity() {
-    companion object { const val EXTRA_CREATE_NEW_NOTE = "paperya_create_new_note" }
+    companion object {
+        const val EXTRA_CREATE_NEW_NOTE = "paperya_create_new_note"
+        const val EXTRA_WIDGET_ACTION = "noteflow_widget_action"
+    }
 
     private lateinit var database: NotesDatabase
     private var pendingExportJson = ""
@@ -115,7 +118,8 @@ class MainActivity : ComponentActivity() {
                 refreshCounter = refreshCounter,
                 driveStatus = driveStatus,
                 initialOpenNoteId = intent.getStringExtra(NoteReminderReceiver.EXTRA_NOTE_ID),
-                startWithNewNote = intent.getBooleanExtra(EXTRA_CREATE_NEW_NOTE, false),
+                startWithNewNote = intent.getBooleanExtra(EXTRA_CREATE_NEW_NOTE, false) || !intent.getStringExtra(EXTRA_WIDGET_ACTION).isNullOrBlank(),
+                startWidgetAction = intent.getStringExtra(EXTRA_WIDGET_ACTION),
                 onRefresh = { refreshCounter++; PaperyaWidgetProvider.updateAll(this@MainActivity) },
                 onReminderChanged = { note -> scheduleReminder(note) },
                 onExport = {
@@ -216,6 +220,7 @@ private fun PaperyaRoot(
     driveStatus: String,
     initialOpenNoteId: String?,
     startWithNewNote: Boolean,
+    startWidgetAction: String?,
     onRefresh: () -> Unit,
     onReminderChanged: (Note) -> Unit,
     onExport: () -> Unit,
@@ -224,8 +229,11 @@ private fun PaperyaRoot(
     onDriveRestore: () -> Unit,
     onWidgetThemeChanged: (Int) -> Unit
 ) {
-    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) {
-        mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null)
+    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote, startWidgetAction) {
+        mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note(content = if (startWidgetAction == "checklist") "☐ " else "")) else null)
+    }
+    var pendingWidgetAction by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote, startWidgetAction) {
+        mutableStateOf(startWidgetAction)
     }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var widgetCustomizationOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
@@ -272,6 +280,8 @@ private fun PaperyaRoot(
                     NoteEditorScreen(
                         note = selectedNote!!,
                         isPortuguese = isPortuguese,
+                        startWidgetAction = pendingWidgetAction,
+                        onWidgetActionConsumed = { pendingWidgetAction = null },
                         onSave = { note ->
                             val previous = selectedNote
                             database.save(note)

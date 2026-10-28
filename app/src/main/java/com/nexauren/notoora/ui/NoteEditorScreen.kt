@@ -81,6 +81,8 @@ import java.util.Locale
 fun NoteEditorScreen(
     note: Note,
     isPortuguese: Boolean,
+    startWidgetAction: String? = null,
+    onWidgetActionConsumed: () -> Unit = {},
     onSave: (Note) -> Unit,
     onBack: (Note) -> Unit
 ) {
@@ -117,6 +119,21 @@ fun NoteEditorScreen(
             if (!alreadyAdded) attachments.put(uri.toString())
             draft = draft.copy(attachmentsJson = attachments.toString(), updatedAt = System.currentTimeMillis())
         }
+    }
+
+    LaunchedEffect(note.id, startWidgetAction) {
+        when (startWidgetAction) {
+            "photo" -> {
+                delay(250)
+                backgroundPhotoPicker.launch(arrayOf("image/*"))
+            }
+            "audio" -> {
+                delay(250)
+                attachmentPicker.launch(arrayOf("audio/*"))
+            }
+            "draw" -> showDrawingPad = true
+        }
+        if (startWidgetAction != null) onWidgetActionConsumed()
     }
 
     LaunchedEffect(draft.title, draft.content, draft.backgroundId, draft.themeId, draft.label, draft.attachmentsJson, draft.drawingJson, draft.customBackgroundUri, draft.reminderAt, draft.isPinned, draft.isFavorite, draft.isArchived, draft.isDeleted) {
