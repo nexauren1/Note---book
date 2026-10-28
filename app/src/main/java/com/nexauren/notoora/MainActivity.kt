@@ -33,6 +33,7 @@ import com.nexauren.paperya.ui.NoteAction
 import com.nexauren.paperya.ui.NoteEditorScreen
 import com.nexauren.paperya.ui.PaperyaTheme
 import com.nexauren.paperya.ui.SettingsScreen
+import com.nexauren.paperya.widget.PaperyaWidgetProvider
 import com.nexauren.paperya.reminders.NoteReminderReceiver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,6 +42,8 @@ import kotlinx.coroutines.withContext
 enum class DriveOperation { SYNC, RESTORE }
 
 class MainActivity : ComponentActivity() {
+    companion object { const val EXTRA_CREATE_NEW_NOTE = "paperya_create_new_note" }
+
     private lateinit var database: NotesDatabase
     private var pendingExportJson = ""
     private var pendingDriveOperation = DriveOperation.SYNC
@@ -109,7 +112,8 @@ class MainActivity : ComponentActivity() {
                 refreshCounter = refreshCounter,
                 driveStatus = driveStatus,
                 initialOpenNoteId = intent.getStringExtra(NoteReminderReceiver.EXTRA_NOTE_ID),
-                onRefresh = { refreshCounter++ },
+                startWithNewNote = intent.getBooleanExtra(EXTRA_CREATE_NEW_NOTE, false),
+                onRefresh = { refreshCounter++; PaperyaWidgetProvider.updateAll(this@MainActivity) },
                 onReminderChanged = { note -> scheduleReminder(note) },
                 onExport = {
                     pendingExportJson = database.exportBackupJson()
@@ -207,6 +211,7 @@ private fun PaperyaRoot(
     refreshCounter: Int,
     driveStatus: String,
     initialOpenNoteId: String?,
+    startWithNewNote: Boolean,
     onRefresh: () -> Unit,
     onReminderChanged: (Note) -> Unit,
     onExport: () -> Unit,
@@ -214,7 +219,7 @@ private fun PaperyaRoot(
     onDriveSync: () -> Unit,
     onDriveRestore: () -> Unit
 ) {
-    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId) { mutableStateOf(initialOpenNoteId?.let { database.getNote(it) }) }
+    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) { mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null) }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
