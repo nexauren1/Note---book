@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -223,6 +224,16 @@ private fun PaperyaRoot(
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val preferences = androidx.compose.runtime.remember(context) {
+        context.getSharedPreferences("paperya_settings", android.content.Context.MODE_PRIVATE)
+    }
+    val defaultPortuguese = androidx.compose.runtime.remember(context) {
+        context.resources.configuration.locales[0].language == "pt"
+    }
+    var isPortuguese by androidx.compose.runtime.saveable.rememberSaveable {
+        mutableStateOf(preferences.getBoolean("isPortuguese", defaultPortuguese))
+    }
     var appThemeId by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
     PaperyaTheme(paletteId = selectedNote?.themeId ?: appThemeId) {
         Surface(Modifier.fillMaxSize()) {
@@ -230,6 +241,7 @@ private fun PaperyaRoot(
                 selectedNote != null -> {
                     NoteEditorScreen(
                         note = selectedNote!!,
+                        isPortuguese = isPortuguese,
                         onSave = { note ->
                             val previous = selectedNote
                             database.save(note)
@@ -254,12 +266,17 @@ private fun PaperyaRoot(
                     SettingsScreen(
                         driveStatus = driveStatus,
                         appThemeId = appThemeId,
+                        isPortuguese = isPortuguese,
                         onBack = { settingsOpen = false },
                         onExport = onExport,
                         onImport = onImport,
                         onDriveSync = onDriveSync,
                         onDriveRestore = onDriveRestore,
-                        onThemeChange = { appThemeId = it }
+                        onThemeChange = { appThemeId = it },
+                        onLanguageChange = {
+                            isPortuguese = it
+                            preferences.edit().putBoolean("isPortuguese", it).apply()
+                        }
                     )
                 }
                 else -> {
@@ -282,6 +299,7 @@ private fun PaperyaRoot(
                         },
                         onOpen = { selectedNote = it },
                         onSettings = { settingsOpen = true },
+                        isPortuguese = isPortuguese,
                         onAction = { note, action ->
                             val updated = when (action) {
                                 NoteAction.PIN -> note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis())

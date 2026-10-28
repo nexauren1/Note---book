@@ -75,7 +75,8 @@ fun HomeScreen(
     onCreate: () -> Unit,
     onOpen: (Note) -> Unit,
     onSettings: () -> Unit,
-    onAction: (Note, NoteAction) -> Unit
+    onAction: (Note, NoteAction) -> Unit,
+    isPortuguese: Boolean
 ) {
     val palette = MaterialTheme.colorScheme
     Scaffold(
@@ -104,10 +105,10 @@ fun HomeScreen(
                 Spacer(Modifier.width(11.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Paperya", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                    Text("Your ideas, beautifully kept", style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceVariant)
+                    Text(uiText(isPortuguese, "As tuas ideias, bem guardadas", "Your ideas, beautifully kept"), style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceVariant)
                 }
                 IconButton(onClick = onSettings) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(Icons.Default.Settings, contentDescription = uiText(isPortuguese, "Definições", "Settings"))
                 }
             }
 
@@ -115,7 +116,7 @@ fun HomeScreen(
                 value = query,
                 onValueChange = onQueryChanged,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search notes, words and labels") },
+                placeholder = { Text(uiText(isPortuguese, "Pesquisar notas, texto e etiquetas", "Search notes, words and labels")) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 shape = RoundedCornerShape(18.dp),
@@ -129,10 +130,10 @@ fun HomeScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf(
-                    NoteFilter.ALL to "All",
-                    NoteFilter.FAVORITES to "Favorites",
-                    NoteFilter.ARCHIVED to "Archived",
-                    NoteFilter.TRASH to "Trash"
+                    NoteFilter.ALL to uiText(isPortuguese, "Todas", "All"),
+                    NoteFilter.FAVORITES to uiText(isPortuguese, "Favoritas", "Favorites"),
+                    NoteFilter.ARCHIVED to uiText(isPortuguese, "Arquivadas", "Archived"),
+                    NoteFilter.TRASH to uiText(isPortuguese, "Lixo", "Trash")
                 ).forEach { (item, title) ->
                     FilterChip(
                         selected = filter == item,
@@ -148,15 +149,15 @@ fun HomeScreen(
                         Text("✦", style = MaterialTheme.typography.displayMedium, color = palette.primary)
                         Text(
                             when (filter) {
-                                NoteFilter.TRASH -> "Your trash is empty"
-                                NoteFilter.ARCHIVED -> "Nothing archived yet"
-                                NoteFilter.FAVORITES -> "Your favorite notes will appear here"
-                                else -> "Start with a little idea"
+                                NoteFilter.TRASH -> uiText(isPortuguese, "O lixo está vazio", "Your trash is empty")
+                                NoteFilter.ARCHIVED -> uiText(isPortuguese, "Ainda não tens notas arquivadas", "Nothing archived yet")
+                                NoteFilter.FAVORITES -> uiText(isPortuguese, "As tuas notas favoritas aparecerão aqui", "Your favorite notes will appear here")
+                                else -> uiText(isPortuguese, "Começa com uma pequena ideia", "Start with a little idea")
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Text("Tap + to create your first note.", color = palette.onSurfaceVariant)
+                        Text(uiText(isPortuguese, "Toca em + para criar a tua primeira nota.", "Tap + to create your first note."), color = palette.onSurfaceVariant)
                     }
                 }
             } else {
@@ -169,6 +170,7 @@ fun HomeScreen(
                     items(notes, key = { it.id }) { note ->
                         NoteCard(
                             note = note,
+                            isPortuguese = isPortuguese,
                             onClick = { onOpen(note) },
                             onAction = { onAction(note, it) }
                         )
@@ -181,7 +183,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> Unit) {
+private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onAction: (NoteAction) -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     val darkPaper = note.backgroundId == 11 || note.backgroundId == 19
     val ink = if (darkPaper) Color(0xFFF9F7FF) else Color(0xFF262633)
@@ -197,7 +199,7 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> 
             Column(Modifier.fillMaxWidth().padding(13.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
-                        note.title.ifBlank { "Untitled note" },
+                        note.title.ifBlank { uiText(isPortuguese, "Nota sem título", "Untitled note") },
                         modifier = Modifier.weight(1f),
                         color = ink,
                         style = MaterialTheme.typography.titleMedium,
@@ -207,32 +209,32 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> 
                     )
                     Box {
                         IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(27.dp)) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Note options", tint = ink)
+                            Icon(Icons.Default.MoreVert, contentDescription = uiText(isPortuguese, "Opções da nota", "Note options"), tint = ink)
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
-                                text = { Text(if (note.isPinned) "Unpin" else "Pin") },
+                                text = { Text(if (note.isPinned) uiText(isPortuguese, "Desafixar", "Unpin") else uiText(isPortuguese, "Fixar", "Pin")) },
                                 onClick = { menuOpen = false; onAction(NoteAction.PIN) },
                                 leadingIcon = { Icon(Icons.Default.PushPin, null) }
                             )
                             DropdownMenuItem(
-                                text = { Text(if (note.isFavorite) "Remove favorite" else "Add to favorites") },
+                                text = { Text(if (note.isFavorite) uiText(isPortuguese, "Remover dos favoritos", "Remove favorite") else uiText(isPortuguese, "Adicionar aos favoritos", "Add to favorites")) },
                                 onClick = { menuOpen = false; onAction(NoteAction.FAVORITE) },
                                 leadingIcon = { Icon(Icons.Default.Star, null) }
                             )
                             if (note.isDeleted) {
                                 DropdownMenuItem(
-                                    text = { Text("Restore note") },
+                                    text = { Text(uiText(isPortuguese, "Restaurar nota", "Restore note")) },
                                     onClick = { menuOpen = false; onAction(NoteAction.RESTORE) }
                                 )
                             } else {
                                 DropdownMenuItem(
-                                    text = { Text(if (note.isArchived) "Unarchive" else "Archive") },
+                                    text = { Text(if (note.isArchived) uiText(isPortuguese, "Retirar do arquivo", "Unarchive") else uiText(isPortuguese, "Arquivar", "Archive")) },
                                     onClick = { menuOpen = false; onAction(NoteAction.ARCHIVE) },
                                     leadingIcon = { Icon(Icons.Default.Archive, null) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Move to trash") },
+                                    text = { Text(uiText(isPortuguese, "Mover para o lixo", "Move to trash")) },
                                     onClick = { menuOpen = false; onAction(NoteAction.DELETE) },
                                     leadingIcon = { Icon(Icons.Default.Delete, null) }
                                 )
@@ -250,7 +252,7 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> 
                         modifier = Modifier.padding(top = 5.dp)
                     )
                 } else {
-                    Text("Add a little something…", color = ink.copy(alpha = 0.60f), style = MaterialTheme.typography.bodySmall)
+                    Text(uiText(isPortuguese, "Escreve aqui uma ideia…", "Add a little something…"), color = ink.copy(alpha = 0.60f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.height(9.dp))
                 if (note.label.isNotBlank()) {
@@ -261,12 +263,12 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> 
                 Spacer(Modifier.height(5.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(note.updatedAt)),
+                        SimpleDateFormat("d MMM", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(note.updatedAt)),
                         color = ink.copy(alpha = 0.65f),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.weight(1f)
                     )
-                    if (note.reminderAt > System.currentTimeMillis()) Icon(Icons.Default.Alarm, contentDescription = "Reminder", tint = ink, modifier = Modifier.size(14.dp))
+                    if (note.reminderAt > System.currentTimeMillis()) Icon(Icons.Default.Alarm, contentDescription = uiText(isPortuguese, "Lembrete", "Reminder"), tint = ink, modifier = Modifier.size(14.dp))
                     if (note.isPinned) Icon(Icons.Default.PushPin, null, tint = ink, modifier = Modifier.size(14.dp))
                     if (note.isFavorite) Icon(Icons.Default.Favorite, null, tint = ink, modifier = Modifier.size(14.dp).padding(start = 2.dp))
                 }

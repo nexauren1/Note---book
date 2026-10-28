@@ -59,6 +59,7 @@ private data class InkStroke(val color: Int, val width: Float, val points: List<
 fun DrawingPad(
     initialJson: String,
     paperId: Int,
+    isPortuguese: Boolean,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
@@ -81,17 +82,17 @@ fun DrawingPad(
             Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Sketch pad", style = MaterialTheme.typography.headlineSmall)
-                        Text("Draw, doodle or write by hand", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(uiText(isPortuguese, "Área de desenho", "Sketch pad"), style = MaterialTheme.typography.headlineSmall)
+                        Text(uiText(isPortuguese, "Desenha, rabisca ou escreve à mão", "Draw, doodle or write by hand"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = { if (strokes.isNotEmpty()) strokes.removeAt(strokes.lastIndex) }) {
-                        Icon(Icons.Default.Undo, contentDescription = "Undo last stroke")
+                        Icon(Icons.Default.Undo, contentDescription = uiText(isPortuguese, "Desfazer último traço", "Undo last stroke"))
                     }
                     IconButton(onClick = { strokes.clear() }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Clear drawing")
+                        Icon(Icons.Default.Delete, contentDescription = uiText(isPortuguese, "Limpar desenho", "Clear drawing"))
                     }
                     IconButton(onClick = { onSave(serializeStrokes(strokes)); onDismiss() }) {
-                        Icon(Icons.Default.Check, contentDescription = "Save drawing", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Check, contentDescription = uiText(isPortuguese, "Guardar desenho", "Save drawing"), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -163,7 +164,7 @@ fun DrawingPad(
                 }
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Pen", style = MaterialTheme.typography.labelLarge)
+                    Text(uiText(isPortuguese, "Traço", "Pen"), style = MaterialTheme.typography.labelLarge)
                     Slider(
                         value = strokeWidth,
                         onValueChange = { strokeWidth = it },
@@ -173,8 +174,8 @@ fun DrawingPad(
                     Text(strokeWidth.toInt().toString(), style = MaterialTheme.typography.labelMedium)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    Button(onClick = { onSave(serializeStrokes(strokes)); onDismiss() }) { Text("Save sketch") }
+                    TextButton(onClick = onDismiss) { Text(uiText(isPortuguese, "Cancelar", "Cancel")) }
+                    Button(onClick = { onSave(serializeStrokes(strokes)); onDismiss() }) { Text(uiText(isPortuguese, "Guardar desenho", "Save sketch")) }
                 }
             }
         }

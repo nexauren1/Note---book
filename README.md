@@ -41,7 +41,7 @@ Google may require OAuth verification before general public use. Never publish a
 - Drive sync is user-triggered, not background sync.
 - Attachments currently store URI references; the backup does not yet package attachment bytes for full cross-device migration.
 - Handwriting/drawing strokes are saved, but this prototype has not yet added pressure sensitivity, eraser tools, or export-to-image.
-- Biometric lock, full Portuguese/English localization, advanced widget sizes/background customization, UI/unit tests, accessibility review, and a signed release build remain future work.
+- Biometric lock, advanced widget sizes/background customization, comprehensive accessibility review, UI/unit tests, and a signed release build remain future work. The main navigation, editor and settings now have a Portuguese/English selector; secondary system messages still need a full localization pass.
 - The name Paperya is provisional until store, trademark and domain availability checks are completed.
 
 This is a buildable engineering prototype, not yet a production release. Please test on real devices before distribution.

@@ -78,6 +78,7 @@ import java.util.Locale
 @Composable
 fun NoteEditorScreen(
     note: Note,
+    isPortuguese: Boolean,
     onSave: (Note) -> Unit,
     onBack: (Note) -> Unit
 ) {
@@ -119,9 +120,9 @@ fun NoteEditorScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                IconButton(onClick = { onBack(draft) }) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
+                IconButton(onClick = { onBack(draft) }) { Icon(Icons.Default.ArrowBack, contentDescription = uiText(isPortuguese, "Voltar", "Back")) }
                 Column(Modifier.weight(1f)) {
-                    Text("EDIT NOTE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(uiText(isPortuguese, "EDITAR NOTA", "EDIT NOTE"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     Text(
                         SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(draft.updatedAt)),
                         style = MaterialTheme.typography.bodySmall,
@@ -129,37 +130,37 @@ fun NoteEditorScreen(
                     )
                 }
                 IconButton(onClick = { showReminderDialog = true }) {
-                    Icon(Icons.Default.Alarm, contentDescription = "Set reminder", tint = if (draft.reminderAt > System.currentTimeMillis()) MaterialTheme.colorScheme.primary else Color.Unspecified)
+                    Icon(Icons.Default.Alarm, contentDescription = uiText(isPortuguese, "Definir lembrete", "Set reminder"), tint = if (draft.reminderAt > System.currentTimeMillis()) MaterialTheme.colorScheme.primary else Color.Unspecified)
                 }
                 IconButton(onClick = { showThemePicker = true }) {
-                    Icon(Icons.Default.Palette, contentDescription = "Choose theme")
+                    Icon(Icons.Default.Palette, contentDescription = uiText(isPortuguese, "Escolher tema", "Choose theme"))
                 }
-                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "More options") }
+                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = uiText(isPortuguese, "Mais opções", "More options")) }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text(if (draft.isPinned) "Unpin note" else "Pin note") },
+                        text = { Text(if (draft.isPinned) uiText(isPortuguese, "Desafixar nota", "Unpin note") else uiText(isPortuguese, "Fixar nota", "Pin note")) },
                         leadingIcon = { Icon(Icons.Default.PushPin, null) },
                         onClick = { showMenu = false; draft = draft.copy(isPinned = !draft.isPinned, updatedAt = System.currentTimeMillis()) }
                     )
                     DropdownMenuItem(
-                        text = { Text(if (draft.isFavorite) "Remove favorite" else "Add to favorites") },
+                        text = { Text(if (draft.isFavorite) uiText(isPortuguese, "Remover dos favoritos", "Remove favorite") else uiText(isPortuguese, "Adicionar aos favoritos", "Add to favorites")) },
                         leadingIcon = { Icon(Icons.Default.Star, null) },
                         onClick = { showMenu = false; draft = draft.copy(isFavorite = !draft.isFavorite, updatedAt = System.currentTimeMillis()) }
                     )
                     DropdownMenuItem(
-                        text = { Text("Change paper background") },
+                        text = { Text(uiText(isPortuguese, "Mudar fundo do papel", "Change paper background")) },
                         onClick = { showMenu = false; showBackgroundPicker = true }
                     )
                     DropdownMenuItem(
-                        text = { Text("Edit label") },
+                        text = { Text(uiText(isPortuguese, "Editar etiqueta", "Edit label")) },
                         onClick = { showMenu = false; labelDraft = draft.label; showLabelEditor = true }
                     )
                     DropdownMenuItem(
-                        text = { Text("Archive note") },
+                        text = { Text(uiText(isPortuguese, "Arquivar nota", "Archive note")) },
                         onClick = { showMenu = false; draft = draft.copy(isArchived = !draft.isArchived, updatedAt = System.currentTimeMillis()); onBack(draft) }
                     )
                     DropdownMenuItem(
-                        text = { Text("Move to trash") },
+                        text = { Text(uiText(isPortuguese, "Mover para o lixo", "Move to trash")) },
                         onClick = { showMenu = false; val deleted = draft.copy(isDeleted = true, updatedAt = System.currentTimeMillis()); onSave(deleted); onBack(deleted) }
                     )
                 }
@@ -177,7 +178,7 @@ fun NoteEditorScreen(
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { inner ->
                         Box {
-                            if (draft.title.isEmpty()) Text("Title", style = MaterialTheme.typography.headlineSmall, color = Color(0xFF9C98A1))
+                            if (draft.title.isEmpty()) Text(uiText(isPortuguese, "Título", "Title"), style = MaterialTheme.typography.headlineSmall, color = Color(0xFF9C98A1))
                             inner()
                         }
                     }
@@ -195,7 +196,7 @@ fun NoteEditorScreen(
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { inner ->
                         Box {
-                            if (draft.content.isEmpty()) Text("Write something worth keeping…", style = MaterialTheme.typography.bodyLarge, color = Color(0xFF9C98A1))
+                            if (draft.content.isEmpty()) Text(uiText(isPortuguese, "Escreve algo que valha a pena guardar…", "Write something worth keeping…"), style = MaterialTheme.typography.bodyLarge, color = Color(0xFF9C98A1))
                             inner()
                         }
                     }
@@ -204,7 +205,7 @@ fun NoteEditorScreen(
                 if (draft.reminderAt > 0L) {
                     Surface(color = Color.White.copy(alpha = 0.72f), shape = RoundedCornerShape(12.dp), modifier = Modifier.padding(top = 10.dp)) {
                         Text(
-                            "⏰ Reminder: " + SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault()).format(Date(draft.reminderAt)),
+                            uiText(isPortuguese, "⏰ Lembrete: ", "⏰ Reminder: ") + SimpleDateFormat("EEE, d MMM · HH:mm", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(draft.reminderAt)),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -213,7 +214,7 @@ fun NoteEditorScreen(
                 val attachments = runCatching { JSONArray(draft.attachmentsJson) }.getOrElse { JSONArray() }
                 if (attachments.length() > 0) {
                     Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text("ATTACHMENTS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(uiText(isPortuguese, "ANEXOS", "ATTACHMENTS"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         for (index in 0 until attachments.length()) {
                             val uriText = attachments.optString(index)
                             Row(
@@ -221,7 +222,7 @@ fun NoteEditorScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(Icons.Default.AttachFile, null, tint = MaterialTheme.colorScheme.primary)
-                                Text(Uri.parse(uriText).lastPathSegment ?: "Attached file", modifier = Modifier.weight(1f), maxLines = 1)
+                                Text(Uri.parse(uriText).lastPathSegment ?: uiText(isPortuguese, "Ficheiro anexado", "Attached file"), modifier = Modifier.weight(1f), maxLines = 1)
                                 IconButton(onClick = {
                                     val updated = JSONArray()
                                     for (i in 0 until attachments.length()) if (i != index) updated.put(attachments.optString(i))
@@ -236,7 +237,7 @@ fun NoteEditorScreen(
 
                 if (draft.drawingJson.isNotBlank() && draft.drawingJson != "[]") {
                     Surface(color = Color.White.copy(alpha = 0.72f), shape = RoundedCornerShape(12.dp), modifier = Modifier.padding(top = 10.dp)) {
-                        Text("✎ Sketch saved", modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp), style = MaterialTheme.typography.labelLarge)
+                        Text(uiText(isPortuguese, "✎ Desenho guardado", "✎ Sketch saved"), modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp), style = MaterialTheme.typography.labelLarge)
                     }
                 }
                 if (draft.label.isNotBlank()) {
@@ -258,13 +259,13 @@ fun NoteEditorScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = { showDrawingPad = true }) { Text("✎  Draw") }
-                    TextButton(onClick = { showBackgroundPicker = true }) { Text("▤  Paper") }
-                    TextButton(onClick = { showThemePicker = true }) { Text("◉  Theme") }
+                    TextButton(onClick = { showBackgroundPicker = true }) { Text(uiText(isPortuguese, "▤  Papel", "▤  Paper")) }
+                    TextButton(onClick = { showThemePicker = true }) { Text(uiText(isPortuguese, "◉  Tema", "◉  Theme")) }
                     TextButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }) { Icon(Icons.Default.AttachFile, null); Spacer(Modifier.width(4.dp)); Text("Attach") }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }) { Text("☐  Checklist") }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "• ")) }) { Text("•  Bullets") }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "1. ")) }) { Text("1.  Numbered") }
-                    TextButton(onClick = { showEmojiPicker = true }) { Text("☺  Stickers") }
+                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }) { Text(uiText(isPortuguese, "☐  Lista", "☐  Checklist")) }
+                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "• ")) }) { Text(uiText(isPortuguese, "•  Marcadores", "•  Bullets")) }
+                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "1. ")) }) { Text(uiText(isPortuguese, "1.  Numerada", "1.  Numbered")) }
+                    TextButton(onClick = { showEmojiPicker = true }) { Text(uiText(isPortuguese, "☺  Autocolantes", "☺  Stickers")) }
                 }
             }
         }
@@ -274,6 +275,7 @@ fun NoteEditorScreen(
         DrawingPad(
             initialJson = draft.drawingJson,
             paperId = draft.backgroundId,
+            isPortuguese = isPortuguese,
             onDismiss = { showDrawingPad = false },
             onSave = { json -> draft = draft.copy(drawingJson = json, updatedAt = System.currentTimeMillis()) }
         )
@@ -282,17 +284,17 @@ fun NoteEditorScreen(
     if (showReminderDialog) {
         AlertDialog(
             onDismissRequest = { showReminderDialog = false },
-            title = { Text("Reminder") },
+            title = { Text(uiText(isPortuguese, "Lembrete", "Reminder")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Choose when Paperya should remind you about this note.")
+                    Text(uiText(isPortuguese, "Escolhe quando Paperya te deve lembrar desta nota.", "Choose when Paperya should remind you about this note."))
                     if (draft.reminderAt > System.currentTimeMillis()) {
-                        Text("Scheduled: " + SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault()).format(Date(draft.reminderAt)), color = MaterialTheme.colorScheme.primary)
+                        Text(uiText(isPortuguese, "Agendado: ", "Scheduled: ") + SimpleDateFormat("EEE, d MMM · HH:mm", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(draft.reminderAt)), color = MaterialTheme.colorScheme.primary)
                     }
                     TextButton(onClick = {
                         draft = draft.copy(reminderAt = System.currentTimeMillis() + 60L * 60L * 1000L, updatedAt = System.currentTimeMillis())
                         showReminderDialog = false
-                    }) { Text("In one hour") }
+                    }) { Text(uiText(isPortuguese, "Daqui a uma hora", "In one hour")) }
                     TextButton(onClick = {
                         val tomorrow = Calendar.getInstance().apply {
                             add(Calendar.DAY_OF_YEAR, 1)
@@ -303,28 +305,33 @@ fun NoteEditorScreen(
                         }
                         draft = draft.copy(reminderAt = tomorrow.timeInMillis, updatedAt = System.currentTimeMillis())
                         showReminderDialog = false
-                    }) { Text("Tomorrow at 09:00") }
+                    }) { Text(uiText(isPortuguese, "Amanhã às 09:00", "Tomorrow at 09:00")) }
                     if (draft.reminderAt > 0L) {
                         TextButton(onClick = {
                             draft = draft.copy(reminderAt = 0L, updatedAt = System.currentTimeMillis())
                             showReminderDialog = false
-                        }) { Text("Clear reminder") }
+                        }) { Text(uiText(isPortuguese, "Remover lembrete", "Clear reminder")) }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showReminderDialog = false }) { Text("Close") } }
+            confirmButton = { TextButton(onClick = { showReminderDialog = false }) { Text(uiText(isPortuguese, "Fechar", "Close")) } }
         )
     }
 
     if (showBackgroundPicker) {
         AlertDialog(
             onDismissRequest = { showBackgroundPicker = false },
-            title = { Text("Choose your paper") },
+            title = { Text(uiText(isPortuguese, "Escolhe o fundo", "Choose your paper")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        listOf("Popular", "Plain", "Classic", "Trending").forEach { tab ->
-                            FilterChip(selected = category == tab, onClick = { category = tab }, label = { Text(tab, maxLines = 1) })
+                        listOf(
+                            "Popular" to uiText(isPortuguese, "Popular", "Popular"),
+                            "Plain" to uiText(isPortuguese, "Simples", "Plain"),
+                            "Classic" to uiText(isPortuguese, "Clássico", "Classic"),
+                            "Trending" to uiText(isPortuguese, "Em destaque", "Trending")
+                        ).forEach { (tab, label) ->
+                            FilterChip(selected = category == tab, onClick = { category = tab }, label = { Text(label, maxLines = 1) })
                         }
                     }
                     LazyVerticalGrid(
@@ -344,20 +351,20 @@ fun NoteEditorScreen(
                             ) {
                                 PaperSwatch(index, Modifier.fillMaxWidth().height(94.dp))
                                 Text(preset.name, style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
-                                if (draft.backgroundId == index) Text("Selected", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+                                if (draft.backgroundId == index) Text(uiText(isPortuguese, "Selecionado", "Selected"), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showBackgroundPicker = false }) { Text("Done") } }
+            confirmButton = { TextButton(onClick = { showBackgroundPicker = false }) { Text(uiText(isPortuguese, "Concluído", "Done")) } }
         )
     }
 
     if (showThemePicker) {
         AlertDialog(
             onDismissRequest = { showThemePicker = false },
-            title = { Text("Choose a theme") },
+            title = { Text(uiText(isPortuguese, "Escolhe um tema", "Choose a theme")) },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -380,7 +387,7 @@ fun NoteEditorScreen(
                                 Box(Modifier.size(19.dp).clip(CircleShape).background(palette.secondary))
                             }
                             Text(palette.name, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 5.dp))
-                            if (draft.themeId == index) Text("Selected", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            if (draft.themeId == index) Text(uiText(isPortuguese, "Selecionado", "Selected"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -393,7 +400,7 @@ fun NoteEditorScreen(
         val stickers = listOf("🌷", "🌸", "🌿", "⭐", "✨", "☀️", "🌈", "🐻", "🐰", "🍓", "🍒", "🦋", "💖", "🎀", "☕", "📚", "🌻", "🌙")
         AlertDialog(
             onDismissRequest = { showEmojiPicker = false },
-            title = { Text("Add a little personality") },
+            title = { Text(uiText(isPortuguese, "Dá personalidade à nota", "Add a little personality")) },
             text = {
                 LazyVerticalGrid(columns = GridCells.Fixed(6), modifier = Modifier.heightIn(max = 280.dp)) {
                     itemsIndexed(stickers) { _, sticker ->
@@ -414,13 +421,13 @@ fun NoteEditorScreen(
     if (showLabelEditor) {
         AlertDialog(
             onDismissRequest = { showLabelEditor = false },
-            title = { Text("Note label") },
+            title = { Text(uiText(isPortuguese, "Etiqueta da nota", "Note label")) },
             text = {
                 OutlinedTextField(
                     value = labelDraft,
                     onValueChange = { labelDraft = it },
                     singleLine = true,
-                    placeholder = { Text("Work, study, personal…") },
+                    placeholder = { Text(uiText(isPortuguese, "Trabalho, estudo, pessoal…", "Work, study, personal…")) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
@@ -431,9 +438,9 @@ fun NoteEditorScreen(
                 Button(onClick = {
                     draft = draft.copy(label = labelDraft.trim(), updatedAt = System.currentTimeMillis())
                     showLabelEditor = false
-                }) { Text("Save label") }
+                }) { Text(uiText(isPortuguese, "Guardar etiqueta", "Save label")) }
             },
-            dismissButton = { TextButton(onClick = { showLabelEditor = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showLabelEditor = false }) { Text(uiText(isPortuguese, "Cancelar", "Cancel")) } }
         )
     }
 }
