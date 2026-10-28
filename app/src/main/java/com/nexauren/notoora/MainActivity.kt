@@ -30,6 +30,7 @@ import com.nexauren.paperya.data.Note
 import com.nexauren.paperya.data.NoteFilter
 import com.nexauren.paperya.data.NotesDatabase
 import com.nexauren.paperya.ui.HomeScreen
+import com.nexauren.paperya.ui.CalendarScreen
 import com.nexauren.paperya.ui.LabelManagerScreen
 import com.nexauren.paperya.ui.NoteAction
 import com.nexauren.paperya.ui.NoteEditorScreen
@@ -237,6 +238,8 @@ private fun PaperyaRoot(
     }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var widgetCustomizationOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var calendarOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var returnToSettingsAfterWidget by androidx.compose.runtime.remember { mutableStateOf(true) }
     var labelsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var activeLabelPage by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
@@ -308,14 +311,14 @@ private fun PaperyaRoot(
                         isPortuguese = isPortuguese,
                         onBack = {
                             widgetCustomizationOpen = false
-                            settingsOpen = true
+                            settingsOpen = returnToSettingsAfterWidget
                         },
                         onApply = { themeId ->
                             widgetThemeId = themeId
                             preferences.edit().putInt("widget_theme", themeId).apply()
                             onWidgetThemeChanged(themeId)
                             widgetCustomizationOpen = false
-                            settingsOpen = true
+                            settingsOpen = returnToSettingsAfterWidget
                         }
                     )
                 }
@@ -329,6 +332,7 @@ private fun PaperyaRoot(
                         onDriveSync = onDriveSync,
                         onDriveRestore = onDriveRestore,
                         onCustomizeWidget = {
+                            returnToSettingsAfterWidget = true
                             settingsOpen = false
                             widgetCustomizationOpen = true
                         },
@@ -336,6 +340,14 @@ private fun PaperyaRoot(
                             isPortuguese = it
                             preferences.edit().putBoolean("isPortuguese", it).apply()
                         }
+                    )
+                }
+                calendarOpen -> {
+                    CalendarScreen(
+                        notes = allNotes.filter { it.reminderAt > 0L && !it.isDeleted && !it.isArchived },
+                        isPortuguese = isPortuguese,
+                        onBack = { calendarOpen = false },
+                        onOpenNote = { selectedNote = it }
                     )
                 }
                 labelsOpen -> {
@@ -390,6 +402,18 @@ private fun PaperyaRoot(
                         },
                         onOpen = { selectedNote = it },
                         onSettings = { settingsOpen = true },
+                        onWidgetsClick = {
+                            returnToSettingsAfterWidget = false
+                            settingsOpen = false
+                            widgetCustomizationOpen = true
+                        },
+                        onCalendarClick = {
+                            calendarOpen = true
+                            currentFilter = NoteFilter.ALL
+                            activeLabelPage = null
+                            selectedLabel = null
+                            search = ""
+                        },
                         isPortuguese = isPortuguese,
                         labels = if (activeLabelPage == null) labels else emptyList(),
                         selectedLabel = activeLabelPage ?: selectedLabel,

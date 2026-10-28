@@ -62,5 +62,5 @@ data class Note(
 }
 
 enum class NoteFilter {
-    ALL, FAVORITES, ARCHIVED, TRASH
+    ALL, FAVORITES, ARCHIVED, TRASH, REMINDERS
 }

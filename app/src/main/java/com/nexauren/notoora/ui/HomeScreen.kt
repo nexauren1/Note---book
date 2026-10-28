@@ -20,6 +20,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,6 +32,11 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -44,6 +52,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -52,6 +66,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,8 +80,25 @@ import com.nexauren.paperya.data.NoteFilter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 enum class NoteAction { PIN, FAVORITE, ARCHIVE, DELETE, RESTORE }
+
+@Composable
+private fun QuickNotesDrawerItem(
+    label: String,
+    selected: Boolean,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        selected = selected,
+        onClick = onClick,
+        icon = { Icon(icon, contentDescription = null) },
+        modifier = Modifier.padding(horizontal = 10.dp, vertical = 1.dp)
+    )
+}
 
 @Composable
 fun HomeScreen(
@@ -78,6 +110,8 @@ fun HomeScreen(
     onCreate: () -> Unit,
     onOpen: (Note) -> Unit,
     onSettings: () -> Unit,
+    onWidgetsClick: () -> Unit = {},
+    onCalendarClick: () -> Unit = {},
     onAction: (Note, NoteAction) -> Unit,
     isPortuguese: Boolean,
     labels: List<String> = emptyList(),
@@ -88,15 +122,134 @@ fun HomeScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val palette = MaterialTheme.colorScheme
-    var navigationMenuOpen by remember { mutableStateOf(false) }
-    Scaffold(
-        containerColor = palette.background,
-        floatingActionButton = {
-            FloatingActionButton(onClick = onCreate, containerColor = palette.primary, contentColor = Color.White) {
-                Icon(Icons.Default.Add, contentDescription = "Create note")
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val drawerScope = rememberCoroutineScope()
+    fun closeDrawer(action: () -> Unit) {
+        drawerScope.launch { drawerState.close() }
+        action()
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = pageTitle == null,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerShape = RoundedCornerShape(topEnd = 26.dp, bottomEnd = 26.dp),
+                drawerContainerColor = palette.surface
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth().height(164.dp)
+                            .background(Brush.linearGradient(listOf(Color(0xFFFFC247), Color(0xFF0DCB9A))))
+                    ) {
+                        Box(
+                            Modifier.align(Alignment.TopEnd).padding(18.dp).size(76.dp)
+                                .clip(CircleShape).background(Color.White.copy(alpha = 0.18f))
+                        )
+                        Box(
+                            Modifier.align(Alignment.BottomStart).padding(start = 22.dp, bottom = 22.dp)
+                                .size(34.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.20f))
+                        )
+                        Column(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, bottom = 22.dp)) {
+                            Text(
+                                "NoteFlow",
+                                color = Color.White,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                uiText(isPortuguese, "As tuas notas, sempre à mão", "Your notes, always close"),
+                                color = Color.White.copy(alpha = 0.95f),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Calendário", "Calendar"),
+                        false,
+                        Icons.Default.CalendarMonth
+                    ) { closeDrawer(onCalendarClick) }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Lembretes", "Reminders"),
+                        filter == NoteFilter.REMINDERS,
+                        Icons.Default.Alarm
+                    ) { closeDrawer { onFilterChanged(NoteFilter.REMINDERS) } }
+
+                    HorizontalDivider(Modifier.padding(horizontal = 18.dp, vertical = 8.dp))
+                    Text(
+                        uiText(isPortuguese, "Etiquetas", "Labels"),
+                        modifier = Modifier.padding(start = 26.dp, top = 3.dp, bottom = 3.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = palette.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    labels.forEach { label ->
+                        QuickNotesDrawerItem(
+                            labelDisplayName(label, isPortuguese),
+                            selectedLabel == label && pageTitle == null,
+                            Icons.Default.LocalOffer
+                        ) { closeDrawer { onLabelSelected(label) } }
+                    }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Criar novo marcador", "Create new label"),
+                        false,
+                        Icons.Default.Add
+                    ) { closeDrawer(onLabelsClick) }
+
+                    HorizontalDivider(Modifier.padding(horizontal = 18.dp, vertical = 8.dp))
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Favorito", "Favorites"),
+                        filter == NoteFilter.FAVORITES,
+                        Icons.Default.Star
+                    ) { closeDrawer { onFilterChanged(NoteFilter.FAVORITES) } }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Arquivadas", "Archived"),
+                        filter == NoteFilter.ARCHIVED,
+                        Icons.Default.Archive
+                    ) { closeDrawer { onFilterChanged(NoteFilter.ARCHIVED) } }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Privacidade", "Privacy"),
+                        false,
+                        Icons.Default.Lock
+                    ) { closeDrawer(onSettings) }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Lixo", "Trash"),
+                        filter == NoteFilter.TRASH,
+                        Icons.Default.Delete
+                    ) { closeDrawer { onFilterChanged(NoteFilter.TRASH) } }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Sincronizar e fazer backup", "Sync and backup"),
+                        false,
+                        Icons.Default.CloudSync
+                    ) { closeDrawer(onSettings) }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Widgets", "Widgets"),
+                        false,
+                        Icons.Default.Widgets
+                    ) { closeDrawer(onWidgetsClick) }
+                    QuickNotesDrawerItem(
+                        uiText(isPortuguese, "Configurações", "Settings"),
+                        false,
+                        Icons.Default.Settings
+                    ) { closeDrawer(onSettings) }
+                    Spacer(Modifier.height(10.dp))
+                }
             }
         }
-    ) { padding ->
+    ) {
+        Scaffold(
+            containerColor = palette.background,
+            floatingActionButton = {
+                FloatingActionButton(onClick = onCreate, containerColor = palette.primary, contentColor = Color.White) {
+                    Icon(Icons.Default.Add, contentDescription = uiText(isPortuguese, "Criar nota", "Create note"))
+                }
+            }
+        ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -108,6 +261,10 @@ fun HomeScreen(
                 if (pageTitle != null) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = uiText(isPortuguese, "Voltar", "Back"))
+                    }
+                } else {
+                    IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
+                        Icon(Icons.Default.Menu, contentDescription = uiText(isPortuguese, "Abrir navegação", "Open navigation"))
                     }
                 }
                 Box(
@@ -127,21 +284,7 @@ fun HomeScreen(
                         color = palette.onSurfaceVariant
                     )
                 }
-                Box {
-                    IconButton(onClick = { navigationMenuOpen = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = uiText(isPortuguese, "Menu", "Menu"))
-                    }
-                    DropdownMenu(expanded = navigationMenuOpen, onDismissRequest = { navigationMenuOpen = false }) {
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Todas as notas", "All notes")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ALL) })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Etiquetas", "Labels")) }, leadingIcon = { Icon(Icons.Default.LocalOffer, null) }, onClick = { navigationMenuOpen = false; onLabelsClick() })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Favoritas", "Favorites")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.FAVORITES) })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Arquivadas", "Archived")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ARCHIVED) })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Lixo", "Trash")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.TRASH) })
-                        Divider()
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Definições", "Settings")) }, leadingIcon = { Icon(Icons.Default.Settings, null) }, onClick = { navigationMenuOpen = false; onSettings() })
-                    }
-                }
-            }
+Replace dropdown with drawer            }
 
             OutlinedTextField(
                 value = query,
@@ -197,6 +340,7 @@ fun HomeScreen(
                                 NoteFilter.TRASH -> uiText(isPortuguese, "O lixo está vazio", "Your trash is empty")
                                 NoteFilter.ARCHIVED -> uiText(isPortuguese, "Ainda não tens notas arquivadas", "Nothing archived yet")
                                 NoteFilter.FAVORITES -> uiText(isPortuguese, "As tuas notas favoritas aparecerão aqui", "Your favorite notes will appear here")
+                                NoteFilter.REMINDERS -> uiText(isPortuguese, "Ainda não tens lembretes futuros", "No upcoming reminders yet")
                                 else -> if (pageTitle != null) uiText(isPortuguese, "Ainda não há notas nesta etiqueta", "No notes in this label yet") else uiText(isPortuguese, "Começa com uma pequena ideia", "Start with a little idea")
                             },
                             style = MaterialTheme.typography.titleMedium,
@@ -224,6 +368,7 @@ fun HomeScreen(
                 }
             }
         }
+    }
     }
 }
 

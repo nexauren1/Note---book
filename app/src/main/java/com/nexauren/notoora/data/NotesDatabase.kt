@@ -50,6 +50,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
             NoteFilter.FAVORITES -> "is_deleted = 0 AND is_archived = 0 AND is_favorite = 1"
             NoteFilter.ARCHIVED -> "is_deleted = 0 AND is_archived = 1"
             NoteFilter.TRASH -> "is_deleted = 1"
+            NoteFilter.REMINDERS -> "is_deleted = 0 AND is_archived = 0 AND reminder_at > " + System.currentTimeMillis()
         }
         val result = mutableListOf<Note>()
         readableDatabase.query("notes", null, where, null, null, null, "is_pinned DESC, updated_at DESC").use { cursor ->
