@@ -2,6 +2,7 @@ package com.nexauren.notoora.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
-import androidx.compose.material3.Dialog
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -148,21 +149,16 @@ fun DrawingPad(
                 ) {
                     colors.forEach { colorValue ->
                         Box(
-                            Modifier.size(31.dp).clip(CircleShape)
+                            Modifier.size(if (activeColor == colorValue) 36.dp else 31.dp)
+                                .clip(CircleShape)
                                 .background(Color(colorValue))
-                                .then(if (activeColor == colorValue) Modifier.background(Color.Transparent) else Modifier)
-                                .pointerInput(colorValue) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            if (event.changes.any { it.pressed }) {
-                                                activeColor = colorValue
-                                                break
-                                            }
-                                        }
-                                    }
-                                }
-                        )
+                                .clickable { activeColor = colorValue },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (activeColor == colorValue) {
+                                Box(Modifier.size(15.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.85f)))
+                            }
+                        }
                     }
                 }
 
