@@ -33,6 +33,10 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Palette
@@ -307,39 +311,44 @@ fun NoteEditorScreen(
             }
 
             Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
                 color = editorPalette.card,
                 shape = RoundedCornerShape(20.dp),
                 shadowElevation = 7.dp
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp, vertical = 5.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { showDrawingPad = true }, modifier = Modifier.weight(1f)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Edit, contentDescription = null)
-                            Text(uiText(isPortuguese, "Desenhar", "Draw"), style = MaterialTheme.typography.labelSmall)
-                        }
+                    IconButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.CheckBox, contentDescription = uiText(isPortuguese, "Lista de tarefas", "Checklist"))
                     }
-                    TextButton(onClick = { showBackgroundPicker = true }, modifier = Modifier.weight(1f)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("▤", style = MaterialTheme.typography.titleMedium)
-                            Text(uiText(isPortuguese, "Papel", "Paper"), style = MaterialTheme.typography.labelSmall)
-                        }
+                    IconButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.AttachFile, contentDescription = uiText(isPortuguese, "Anexar ficheiro", "Attach file"))
                     }
-                    TextButton(onClick = { backgroundPhotoPicker.launch(arrayOf("image/*")) }, modifier = Modifier.weight(1f)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                            Text(uiText(isPortuguese, "Foto", "Photo"), style = MaterialTheme.typography.labelSmall)
-                        }
+                    IconButton(onClick = { showDrawingPad = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = uiText(isPortuguese, "Desenhar", "Draw"))
                     }
-                    TextButton(onClick = { showThemePicker = true }, modifier = Modifier.weight(1f)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Palette, contentDescription = null)
-                            Text(uiText(isPortuguese, "Tema", "Theme"), style = MaterialTheme.typography.labelSmall)
-                        }
+                    IconButton(onClick = { showEmojiPicker = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.EmojiEmotions, contentDescription = uiText(isPortuguese, "Emojis e autocolantes", "Emoji and stickers"))
+                    }
+                    IconButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "• ")) }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.FormatListBulleted, contentDescription = uiText(isPortuguese, "Lista com marcadores", "Bulleted list"))
+                    }
+                    IconButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "1. ")) }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.FormatListNumbered, contentDescription = uiText(isPortuguese, "Lista numerada", "Numbered list"))
+                    }
+                    IconButton(onClick = { showBackgroundPicker = true }, modifier = Modifier.size(44.dp)) {
+                        Text("▤", style = MaterialTheme.typography.titleLarge)
+                    }
+                    IconButton(onClick = { backgroundPhotoPicker.launch(arrayOf("image/*")) }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Image, contentDescription = uiText(isPortuguese, "Escolher imagem de fundo", "Choose background image"))
+                    }
+                    IconButton(onClick = { showThemePicker = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Palette, contentDescription = uiText(isPortuguese, "Tema", "Theme"))
                     }
                 }
             }
@@ -412,7 +421,7 @@ fun NoteEditorScreen(
                         }
                     }
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
+                        columns = GridCells.Fixed(4),
                         modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
