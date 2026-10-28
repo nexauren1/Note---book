@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -41,6 +42,10 @@ import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Palette
@@ -104,10 +109,26 @@ fun NoteEditorScreen(
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showAttachmentChooser by remember { mutableStateOf(false) }
+    var showReadingMode by remember { mutableStateOf(false) }
+    var showNoteDetails by remember { mutableStateOf(false) }
+    var pendingExportText by remember { mutableStateOf("") }
     var photoAttachmentUri by remember { mutableStateOf<Uri?>(null) }
     var showLabelEditor by remember { mutableStateOf(false) }
     var category by remember { mutableStateOf("Popular") }
     var labelDraft by remember(draft.id) { mutableStateOf(draft.label) }
+
+    val noteExportPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                val output = context.contentResolver.openOutputStream(uri) ?: error("Could not open the selected file.")
+                output.bufferedWriter(Charsets.UTF_8).use { it.write(pendingExportText) }
+            }.onSuccess {
+                Toast.makeText(context, uiText(isPortuguese, "Nota exportada", "Note exported"), Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(context, uiText(isPortuguese, "Não foi possível exportar a nota", "Could not export note"), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val backgroundPhotoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
@@ -181,7 +202,7 @@ fun NoteEditorScreen(
             ) {
                 IconButton(onClick = { onBack(draft) }) { Icon(Icons.Default.ArrowBack, contentDescription = uiText(isPortuguese, "Voltar", "Back")) }
                 Column(Modifier.weight(1f)) {
-                    Text(uiText(isPortuguese, "EDITAR NOTA", "EDIT NOTE"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(if (showReadingMode) uiText(isPortuguese, "MODO DE LEITURA", "READING MODE") else uiText(isPortuguese, "EDITAR NOTA", "EDIT NOTE"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     Text(
                         SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(draft.updatedAt)),
                         style = MaterialTheme.typography.bodySmall,
@@ -205,6 +226,49 @@ fun NoteEditorScreen(
                         text = { Text(if (draft.isFavorite) uiText(isPortuguese, "Remover dos favoritos", "Remove favorite") else uiText(isPortuguese, "Adicionar aos favoritos", "Add to favorites")) },
                         leadingIcon = { Icon(Icons.Default.Star, null) },
                         onClick = { showMenu = false; draft = draft.copy(isFavorite = !draft.isFavorite, updatedAt = System.currentTimeMillis()) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Enviar", "Share")) },
+                        leadingIcon = { Icon(Icons.Default.Share, null) },
+                        onClick = {
+                            showMenu = false
+                            val shareText = buildString {
+                                if (draft.title.isNotBlank()) append(draft.title).append("\n\n")
+                                append(draft.content)
+                                if (draft.label.isNotBlank()) append("\n\n").append(uiText(isPortuguese, "Etiqueta: ", "Label: ")).append(draft.label)
+                            }
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, draft.title.ifBlank { uiText(isPortuguese, "Nota NoteFlow", "NoteFlow note") })
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            }
+                            runCatching {
+                                context.startActivity(Intent.createChooser(sendIntent, uiText(isPortuguese, "Enviar nota", "Share note")))
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Exportar", "Export")) },
+                        leadingIcon = { Icon(Icons.Default.FileDownload, null) },
+                        onClick = {
+                            showMenu = false
+                            pendingExportText = buildString {
+                                if (draft.title.isNotBlank()) append(draft.title).append("\n\n")
+                                append(draft.content)
+                                if (draft.label.isNotBlank()) append("\n\n").append(uiText(isPortuguese, "Etiqueta: ", "Label: ")).append(draft.label)
+                            }
+                            noteExportPicker.launch("NoteFlow-note.txt")
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (showReadingMode) uiText(isPortuguese, "Voltar à edição", "Back to editing") else uiText(isPortuguese, "Modo de leitura", "Reading mode")) },
+                        leadingIcon = { Icon(Icons.Default.Visibility, null) },
+                        onClick = { showMenu = false; showReadingMode = !showReadingMode }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Detalhes da nota", "Note details")) },
+                        leadingIcon = { Icon(Icons.Default.Info, null) },
+                        onClick = { showMenu = false; showNoteDetails = true }
                     )
                     DropdownMenuItem(
                         text = { Text(uiText(isPortuguese, "Mudar fundo do papel", "Change paper background")) },
@@ -257,6 +321,7 @@ fun NoteEditorScreen(
                 BasicTextField(
                     value = draft.title,
                     onValueChange = { draft = draft.copy(title = it) },
+                    readOnly = showReadingMode,
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 10.dp),
                     textStyle = MaterialTheme.typography.headlineSmall.copy(color = editorPalette.ink, fontWeight = FontWeight.SemiBold),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -271,6 +336,7 @@ fun NoteEditorScreen(
                 BasicTextField(
                     value = draft.content,
                     onValueChange = { draft = draft.copy(content = it) },
+                    readOnly = showReadingMode,
                     modifier = Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 250.dp).padding(top = 14.dp),
                     textStyle = TextStyle(
                         color = editorPalette.ink,
@@ -587,6 +653,30 @@ fun NoteEditorScreen(
                 }
             },
             confirmButton = { TextButton(onClick = { showEmojiPicker = false }) { Text(uiText(isPortuguese, "Fechar", "Close")) } }
+        )
+    }
+
+    if (showNoteDetails) {
+        val attachmentCount = runCatching { JSONArray(draft.attachmentsJson).length() }.getOrDefault(0)
+        AlertDialog(
+            onDismissRequest = { showNoteDetails = false },
+            title = { Text(uiText(isPortuguese, "Detalhes da nota", "Note details")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(uiText(isPortuguese, "Criada: ", "Created: ") +
+                        SimpleDateFormat("d MMM yyyy · HH:mm", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(draft.createdAt)))
+                    Text(uiText(isPortuguese, "Atualizada: ", "Updated: ") +
+                        SimpleDateFormat("d MMM yyyy · HH:mm", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(draft.updatedAt)))
+                    Text(uiText(isPortuguese, "Caracteres: ", "Characters: ") + draft.content.length)
+                    Text(uiText(isPortuguese, "Anexos: ", "Attachments: ") + attachmentCount)
+                    if (draft.label.isNotBlank()) Text(uiText(isPortuguese, "Etiqueta: ", "Label: ") + labelDisplayName(draft.label, isPortuguese))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showNoteDetails = false }) {
+                    Text(uiText(isPortuguese, "Fechar", "Close"))
+                }
+            }
         )
     }
 
