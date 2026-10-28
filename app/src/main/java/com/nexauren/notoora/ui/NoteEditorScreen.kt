@@ -1,7 +1,11 @@
 package com.nexauren.paperya.ui
 
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -99,6 +103,8 @@ fun NoteEditorScreen(
     var showReminderDialog by remember { mutableStateOf(false) }
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showAttachmentChooser by remember { mutableStateOf(false) }
+    var photoAttachmentUri by remember { mutableStateOf<Uri?>(null) }
     var showLabelEditor by remember { mutableStateOf(false) }
     var category by remember { mutableStateOf("Popular") }
     var labelDraft by remember(draft.id) { mutableStateOf(draft.label) }
@@ -112,17 +118,37 @@ fun NoteEditorScreen(
         }
     }
 
-    val attachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            val attachments = runCatching { JSONArray(draft.attachmentsJson) }.getOrElse { JSONArray() }
-            var alreadyAdded = false
-            for (index in 0 until attachments.length()) if (attachments.optString(index) == uri.toString()) alreadyAdded = true
-            if (!alreadyAdded) attachments.put(uri.toString())
-            draft = draft.copy(attachmentsJson = attachments.toString(), updatedAt = System.currentTimeMillis())
+    fun addAttachment(uri: Uri) {
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        val attachments = runCatching { JSONArray(draft.attachmentsJson) }.getOrElse { JSONArray() }
+        var alreadyAdded = false
+        for (index in 0 until attachments.length()) if (attachments.optString(index) == uri.toString()) alreadyAdded = true
+        if (!alreadyAdded) attachments.put(uri.toString())
+        draft = draft.copy(attachmentsJson = attachments.toString(), updatedAt = System.currentTimeMillis())
+    }
+
+    val attachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) addAttachment(uri)
+    }
+
+    val photoAttachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) addAttachment(uri)
+    }
+
+    val videoAttachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) addAttachment(uri)
+    }
+
+    val takePhotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        val capturedUri = photoAttachmentUri
+        if (success && capturedUri != null) {
+            addAttachment(capturedUri)
+        } else if (capturedUri != null) {
+            runCatching { context.contentResolver.delete(capturedUri, null, null) }
+        }
+        photoAttachmentUri = null
     }
 
     LaunchedEffect(note.id, startWidgetAction) {
@@ -198,7 +224,7 @@ fun NoteEditorScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(uiText(isPortuguese, "Anexar ficheiro", "Attach file")) },
-                        onClick = { showMenu = false; attachmentPicker.launch(arrayOf("*/*")) }
+                        onClick = { showMenu = false; showAttachmentChooser = true }
                     )
                     DropdownMenuItem(
                         text = { Text(uiText(isPortuguese, "Lista de tarefas", "Checklist")) },
@@ -326,7 +352,7 @@ fun NoteEditorScreen(
                     IconButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }, modifier = Modifier.size(44.dp)) {
                         Icon(Icons.Default.CheckBox, contentDescription = uiText(isPortuguese, "Lista de tarefas", "Checklist"))
                     }
-                    IconButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }, modifier = Modifier.size(44.dp)) {
+                    IconButton(onClick = { showAttachmentChooser = true }, modifier = Modifier.size(44.dp)) {
                         Icon(Icons.Default.AttachFile, contentDescription = uiText(isPortuguese, "Anexar ficheiro", "Attach file"))
                     }
                     IconButton(onClick = { showDrawingPad = true }, modifier = Modifier.size(44.dp)) {
@@ -400,6 +426,66 @@ fun NoteEditorScreen(
                 }
             },
             confirmButton = { TextButton(onClick = { showReminderDialog = false }) { Text(uiText(isPortuguese, "Fechar", "Close")) } }
+        )
+    }
+
+    if (showAttachmentChooser) {
+        AlertDialog(
+            onDismissRequest = { showAttachmentChooser = false },
+            title = { Text(uiText(isPortuguese, "Anexo", "Attachment")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = {
+                            showAttachmentChooser = false
+                            val values = ContentValues().apply {
+                                put(MediaStore.Images.Media.DISPLAY_NAME, "NoteFlow-${System.currentTimeMillis()}.jpg")
+                                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/NoteFlow")
+                                }
+                            }
+                            val uri = runCatching {
+                                context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                            }.getOrNull()
+                            if (uri != null) {
+                                photoAttachmentUri = uri
+                                takePhotoLauncher.launch(uri)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(uiText(isPortuguese, "Tirar foto", "Take photo")) }
+
+                    TextButton(
+                        onClick = {
+                            showAttachmentChooser = false
+                            photoAttachmentPicker.launch(arrayOf("image/*"))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(uiText(isPortuguese, "Escolher imagem", "Choose image")) }
+
+                    TextButton(
+                        onClick = {
+                            showAttachmentChooser = false
+                            videoAttachmentPicker.launch(arrayOf("video/*"))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(uiText(isPortuguese, "Importar vídeos", "Import videos")) }
+
+                    TextButton(
+                        onClick = {
+                            showAttachmentChooser = false
+                            attachmentPicker.launch(arrayOf("*/*"))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(uiText(isPortuguese, "Inserir ficheiros", "Insert files")) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAttachmentChooser = false }) {
+                    Text(uiText(isPortuguese, "Fechar", "Close"))
+                }
+            }
         )
     }
 
