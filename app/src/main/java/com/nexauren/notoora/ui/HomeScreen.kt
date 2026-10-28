@@ -230,8 +230,7 @@ fun HomeScreen(
 @Composable
 private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onAction: (NoteAction) -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
-    val notePalette = NotePalettes.getOrElse(note.themeId) { NotePalettes.first() }
-    val ink = notePalette.ink
+    val ink = Color(0xFF262633)
     Card(
         modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp)
             .clip(RoundedCornerShape(19.dp)).clickable(onClick = onClick),
@@ -243,7 +242,7 @@ private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onA
             PaperBackground(note.backgroundId, Modifier.matchParentSize(), note.customBackgroundUri.takeIf { it.isNotBlank() })
             Column(
                 Modifier.fillMaxWidth().padding(7.dp).clip(RoundedCornerShape(13.dp))
-                    .background(notePalette.page.copy(alpha = 0.98f)).padding(11.dp)
+                    .background(Color(0xFFFCFBFF).copy(alpha = 0.98f)).padding(11.dp)
             ) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
