@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -59,6 +60,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -87,6 +90,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditorScreen(
     note: Note,
@@ -112,6 +116,7 @@ fun NoteEditorScreen(
     var photoAttachmentUri by remember { mutableStateOf<Uri?>(null) }
     var showLabelEditor by remember { mutableStateOf(false) }
     var category by remember { mutableStateOf("Popular") }
+    var previewPaperId by remember { mutableStateOf(draft.backgroundId) }
     var labelDraft by remember(draft.id) { mutableStateOf(draft.label) }
 
     val noteExportPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri: Uri? ->
@@ -167,6 +172,10 @@ fun NoteEditorScreen(
             runCatching { context.contentResolver.delete(capturedUri, null, null) }
         }
         photoAttachmentUri = null
+    }
+
+    LaunchedEffect(showBackgroundPicker, draft.backgroundId) {
+        if (showBackgroundPicker) previewPaperId = draft.backgroundId
     }
 
     LaunchedEffect(note.id, startWidgetAction) {
@@ -555,47 +564,109 @@ fun NoteEditorScreen(
     }
 
     if (showBackgroundPicker) {
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showBackgroundPicker = false },
-            title = { Text(uiText(isPortuguese, "Escolhe o fundo", "Choose your paper")) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        listOf(
-                            "Popular" to uiText(isPortuguese, "Popular", "Popular"),
-                            "Common" to uiText(isPortuguese, "Comum", "Common"),
-                            "Plain" to uiText(isPortuguese, "Plano", "Plain"),
-                            "Classic" to uiText(isPortuguese, "Clássica", "Classic"),
-                            "Trending" to uiText(isPortuguese, "Na moda", "Trending")
-                        ).forEach { (tab, label) ->
-                            FilterChip(selected = category == tab, onClick = { category = tab }, label = { Text(label, maxLines = 1) })
-                        }
+            containerColor = Color(0xFFF7F7F8)
+        ) {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 790.dp).padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        uiText(isPortuguese, "Selecionar plano de fundo", "Choose a paper background"),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    IconButton(onClick = { showBackgroundPicker = false }) {
+                        Icon(Icons.Default.Close, contentDescription = uiText(isPortuguese, "Fechar", "Close"))
                     }
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        itemsIndexed(PaperPresets.filter { it.category == category }) { _, preset ->
-                            val index = PaperPresets.indexOf(preset)
+                }
+
+                PaperSwatch(
+                    previewPaperId,
+                    Modifier.align(Alignment.CenterHorizontally).width(138.dp).height(210.dp)
+                )
+                Text(
+                    paperDisplayName(PaperPresets.getOrElse(previewPaperId) { PaperPresets.first() }.name, isPortuguese),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    listOf(
+                        "Popular" to uiText(isPortuguese, "Popular", "Popular"),
+                        "Common" to uiText(isPortuguese, "Comum", "Common"),
+                        "Plain" to uiText(isPortuguese, "Plano", "Plain"),
+                        "Classic" to uiText(isPortuguese, "Clássica", "Classic"),
+                        "Trending" to uiText(isPortuguese, "Na moda", "Trending")
+                    ).forEach { (tab, label) ->
+                        FilterChip(
+                            selected = category == tab,
+                            onClick = { category = tab },
+                            label = { Text(label, maxLines = 1) }
+                        )
+                    }
+                }
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    itemsIndexed(PaperPresets.withIndex().filter { it.value.category == category }) { _, indexedPreset ->
+                        val index = indexedPreset.index
+                        val preset = indexedPreset.value
+                        val selected = previewPaperId == index
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clickable { previewPaperId = index },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(
+                                if (selected) 2.dp else 1.dp,
+                                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                            ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
+                            )
+                        ) {
                             Column(
-                                modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable {
-                                    draft = draft.copy(backgroundId = index, customBackgroundUri = "", updatedAt = System.currentTimeMillis())
-                                    showBackgroundPicker = false
-                                },
+                                Modifier.fillMaxWidth().padding(5.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                PaperSwatch(index, Modifier.fillMaxWidth().height(94.dp))
-                                Text(paperDisplayName(preset.name, isPortuguese), style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
-                                if (draft.backgroundId == index) Text(uiText(isPortuguese, "Selecionado", "Selected"), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+                                PaperSwatch(index, Modifier.fillMaxWidth().height(78.dp))
+                                Text(
+                                    paperDisplayName(preset.name, isPortuguese),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(top = 5.dp, bottom = 3.dp)
+                                )
                             }
                         }
                     }
                 }
-            },
-            confirmButton = { TextButton(onClick = { showBackgroundPicker = false }) { Text(uiText(isPortuguese, "Concluído", "Done")) } }
-        )
+
+                Button(
+                    onClick = {
+                        draft = draft.copy(
+                            backgroundId = previewPaperId,
+                            customBackgroundUri = "",
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        showBackgroundPicker = false
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(uiText(isPortuguese, "Selecionar", "Select"))
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+        }
     }
 
     if (showThemePicker) {
