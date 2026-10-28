@@ -1,14 +1,11 @@
 package com.nexauren.paperya.ui
 
-import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -504,19 +501,21 @@ fun NoteEditorScreen(
                     TextButton(
                         onClick = {
                             showAttachmentChooser = false
-                            val values = ContentValues().apply {
-                                put(MediaStore.Images.Media.DISPLAY_NAME, "NoteFlow-${System.currentTimeMillis()}.jpg")
-                                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/NoteFlow")
+                                            runCatching {
+                                val photoDirectory = java.io.File(context.filesDir, "note-photos")
+                                if (!photoDirectory.exists() && !photoDirectory.mkdirs()) {
+                                    error("Could not create the photo folder.")
                                 }
-                            }
-                            val uri = runCatching {
-                                context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-                            }.getOrNull()
-                            if (uri != null) {
+                                val photoFile = java.io.File(photoDirectory, "NoteFlow-${System.currentTimeMillis()}.jpg")
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    photoFile
+                                )
                                 photoAttachmentUri = uri
                                 takePhotoLauncher.launch(uri)
+                            }.onFailure {
+                                Toast.makeText(context, uiText(isPortuguese, "Não foi possível abrir a câmara", "Could not open the camera"), Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
