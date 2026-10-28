@@ -223,6 +223,7 @@ private fun PaperyaRoot(
     var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) { mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null) }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
+    var selectedLabel by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
     val context = LocalContext.current
     val preferences = androidx.compose.runtime.remember(context) {
@@ -235,7 +236,7 @@ private fun PaperyaRoot(
         mutableStateOf(preferences.getBoolean("isPortuguese", defaultPortuguese))
     }
     var appThemeId by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
-    PaperyaTheme(paletteId = selectedNote?.themeId ?: appThemeId) {
+    PaperyaTheme(paletteId = appThemeId) {
         Surface(Modifier.fillMaxSize()) {
             when {
                 selectedNote != null -> {
@@ -280,11 +281,13 @@ private fun PaperyaRoot(
                     )
                 }
                 else -> {
-                    val notes = androidx.compose.runtime.remember(refreshCounter, currentFilter, search) {
+                    val allNotes = androidx.compose.runtime.remember(refreshCounter) { database.getNotes(NoteFilter.ALL) + database.getNotes(NoteFilter.ARCHIVED) + database.getNotes(NoteFilter.TRASH) }
+                    val labels = androidx.compose.runtime.remember(allNotes) { (listOf("Trabalho", "Estudo", "Pessoal", "Ideias", "Tarefas") + allNotes.map { it.label }.filter { it.isNotBlank() }).distinct().sorted() }
+                    val notes = androidx.compose.runtime.remember(refreshCounter, currentFilter, search, selectedLabel) {
                         database.getNotes(currentFilter).filter {
-                            search.isBlank() || it.title.contains(search, ignoreCase = true) ||
-                                it.content.contains(search, ignoreCase = true) ||
-                                it.label.contains(search, ignoreCase = true)
+                            (selectedLabel == null || it.label.equals(selectedLabel, ignoreCase = true)) &&
+                                (search.isBlank() || it.title.contains(search, ignoreCase = true) ||
+                                it.content.contains(search, ignoreCase = true) || it.label.contains(search, ignoreCase = true))
                         }
                     }
                     HomeScreen(
@@ -300,6 +303,9 @@ private fun PaperyaRoot(
                         onOpen = { selectedNote = it },
                         onSettings = { settingsOpen = true },
                         isPortuguese = isPortuguese,
+                        labels = labels,
+                        selectedLabel = selectedLabel,
+                        onLabelSelected = { selectedLabel = it; currentFilter = NoteFilter.ALL },
                         onAction = { note, action ->
                             val updated = when (action) {
                                 NoteAction.PIN -> note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis())
