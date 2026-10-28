@@ -410,7 +410,7 @@ fun NoteEditorScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 PaperSwatch(index, Modifier.fillMaxWidth().height(94.dp))
-                                Text(preset.name, style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+                                Text(paperDisplayName(preset.name, isPortuguese), style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
                                 if (draft.backgroundId == index) Text(uiText(isPortuguese, "Selecionado", "Selected"), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
@@ -446,13 +446,13 @@ fun NoteEditorScreen(
                             ) {
                                 Box(Modifier.size(19.dp).clip(CircleShape).background(palette.secondary))
                             }
-                            Text(palette.name, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 5.dp))
+                            Text(paletteDisplayName(palette.name, isPortuguese), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 5.dp))
                             if (draft.themeId == index) Text(uiText(isPortuguese, "Selecionado", "Selected"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showThemePicker = false }) { Text("Done") } }
+            confirmButton = { TextButton(onClick = { showThemePicker = false }) { Text(uiText(isPortuguese, "Concluído", "Done")) } }
         )
     }
 
@@ -474,7 +474,7 @@ fun NoteEditorScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showEmojiPicker = false }) { Text("Close") } }
+            confirmButton = { TextButton(onClick = { showEmojiPicker = false }) { Text(uiText(isPortuguese, "Fechar", "Close")) } }
         )
     }
 
@@ -496,12 +496,12 @@ fun NoteEditorScreen(
                 Text(uiText(isPortuguese, "Etiquetas prontas", "Quick labels"), style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("Trabalho", "Estudo", "Pessoal").forEach { readyLabel ->
-                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(readyLabel) })
+                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(labelDisplayName(readyLabel, isPortuguese)) })
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("Ideias", "Tarefas").forEach { readyLabel ->
-                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(readyLabel) })
+                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(labelDisplayName(readyLabel, isPortuguese)) })
                     }
                 }
             },

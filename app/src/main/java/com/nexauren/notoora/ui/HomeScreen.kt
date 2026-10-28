@@ -132,11 +132,11 @@ fun HomeScreen(
                         Icon(Icons.Default.MoreVert, contentDescription = uiText(isPortuguese, "Menu", "Menu"))
                     }
                     DropdownMenu(expanded = navigationMenuOpen, onDismissRequest = { navigationMenuOpen = false }) {
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Todas as notas", "All notes")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ALL); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Todas as notas", "All notes")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ALL) })
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Etiquetas", "Labels")) }, leadingIcon = { Icon(Icons.Default.LocalOffer, null) }, onClick = { navigationMenuOpen = false; onLabelsClick() })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Favoritas", "Favorites")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.FAVORITES); onLabelSelected(null) })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Arquivadas", "Archived")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ARCHIVED); onLabelSelected(null) })
-                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Lixo", "Trash")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.TRASH); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Favoritas", "Favorites")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.FAVORITES) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Arquivadas", "Archived")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ARCHIVED) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Lixo", "Trash")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.TRASH) })
                         Divider()
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Definições", "Settings")) }, leadingIcon = { Icon(Icons.Default.Settings, null) }, onClick = { navigationMenuOpen = false; onSettings() })
                     }
@@ -305,7 +305,7 @@ private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onA
                 Spacer(Modifier.height(9.dp))
                 if (note.label.isNotBlank()) {
                     Surface(color = ink.copy(alpha = 0.10f), shape = RoundedCornerShape(9.dp)) {
-                        Text(note.label, color = ink, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                        Text(labelDisplayName(note.label, isPortuguese), color = ink, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                     }
                 }
                 Spacer(Modifier.height(5.dp))

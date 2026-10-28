@@ -63,3 +63,54 @@ val PaperPresets = listOf(
     PaperPreset("Pistachio", "Popular", Color(0xFFF1FFE8), Color(0xFFC2E6A7), Color(0xFF6FAD65), PaperPattern.GRID),
     PaperPreset("Blue journal", "Classic", Color(0xFFF0F8FF), Color(0xFFB1D4ED), Color(0xFF5C9BCB), PaperPattern.MARGINS)
 )
+
+
+fun paletteDisplayName(name: String, isPortuguese: Boolean): String {
+    if (!isPortuguese) return name
+    return when (name) {
+        "Lavender" -> "Lavanda"
+        "Ocean" -> "Oceano"
+        "Rose" -> "Rosa"
+        "Meadow" -> "Prado"
+        "Sunshine" -> "Sol"
+        "Midnight" -> "Meia-noite"
+        "Mint" -> "Menta"
+        "Peach" -> "Pêssego"
+        "Sky" -> "Céu"
+        "Berry" -> "Frutos silvestres"
+        "Forest" -> "Floresta"
+        "Graphite" -> "Grafite"
+        else -> name
+    }
+}
+
+fun paperDisplayName(name: String, isPortuguese: Boolean): String {
+    if (!isPortuguese) return name
+    return when (name) {
+        "Clean white" -> "Branco limpo"
+        "Blue ruled" -> "Pautado azul"
+        "Graph paper" -> "Quadriculado"
+        "Soft dots" -> "Pontos suaves"
+        "Lilac grid" -> "Grelha lilás"
+        "Peach checks" -> "Xadrez pêssego"
+        "Mint confetti" -> "Confetes menta"
+        "Sunset glow" -> "Brilho do pôr do sol"
+        "Ocean sky" -> "Céu oceânico"
+        "Rose garden" -> "Jardim de rosas"
+        "Meadow" -> "Prado"
+        "Night sky" -> "Céu noturno"
+        "Cream notebook" -> "Caderno creme"
+        "Aqua lines" -> "Linhas aqua"
+        "Kraft paper" -> "Papel kraft"
+        "Candy stripes" -> "Riscas doces"
+        "Starry lavender" -> "Lavanda estrelada"
+        "Green margin" -> "Margem verde"
+        "Cherry grid" -> "Grelha cereja"
+        "Blueberry dusk" -> "Crepúsculo azul"
+        "Lemon cream" -> "Creme de limão"
+        "Warm sand" -> "Areia quente"
+        "Pistachio" -> "Pistácio"
+        "Blue journal" -> "Diário azul"
+        else -> name
+    }
+}
