@@ -11,6 +11,7 @@ data class Note(
     val themeId: Int = 0,
     val label: String = "",
     val attachmentsJson: String = "[]",
+    val drawingJson: String = "[]",
     val isPinned: Boolean = false,
     val isFavorite: Boolean = false,
     val isArchived: Boolean = false,
@@ -26,6 +27,7 @@ data class Note(
         .put("themeId", themeId)
         .put("label", label)
         .put("attachmentsJson", attachmentsJson)
+        .put("drawingJson", drawingJson)
         .put("isPinned", isPinned)
         .put("isFavorite", isFavorite)
         .put("isArchived", isArchived)
@@ -42,6 +44,7 @@ data class Note(
             themeId = json.optInt("themeId", 0),
             label = json.optString("label"),
             attachmentsJson = json.optString("attachmentsJson", "[]"),
+            drawingJson = json.optString("drawingJson", "[]"),
             isPinned = json.optBoolean("isPinned", false),
             isFavorite = json.optBoolean("isFavorite", false),
             isArchived = json.optBoolean("isArchived", false),

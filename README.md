@@ -2,39 +2,44 @@
 
 Notoora is a native Android note-taking app inspired by the workflow shown in the reference screenshots. The code, icon, palettes and paper patterns in this project are original; the reference app's brand and artwork are not copied.
 
-## Implemented in this first build
+## Included in the current prototype
 
 - Kotlin + Jetpack Compose Android UI.
-- Local-first notes stored in SQLite.
-- Auto-save while editing, search across title/body/label, note labels, favourites and pinning.
-- Archive and trash flows. Deleted notes are retained as tombstones so deletions can travel through a sync.
-- 24 procedural paper presets: plain, lined, grid, dots, gingham, confetti, leaf-like borders, gradients, stars and margins. These designs are generated in Compose Canvas instead of shipping a large image pack.
-- 12 accent palettes.
-- Checklist, bullet, numbered-list and emoji/sticker insertion helpers.
-- File attachment picker (stores selected document URIs).
-- JSON import/export using Android's system document picker.
-- Google Drive sync/backup code using Google Identity authorization and the Drive API drive.file scope. Notes are merged by UUID and updatedAt before uploading one Notoora Backup.json file.
+- Local-first notes stored in SQLite, with schema migration.
+- Auto-save, search across title/body/label, custom labels, favourites and pinning.
+- Archive and trash flows. Deleted notes remain as tombstones to carry deletions through backup merges.
+- 24 procedural paper presets generated at render time with Compose Canvas: plain, lined, grid, dots, gingham, confetti, leafy borders, gradients, stars and margin styles.
+- 12 color palettes for the app accent and note appearance.
+- Drawing canvas with selected ink colors, adjustable stroke width, undo and clear; strokes are saved as normalized points in each note and included in JSON/Drive backups.
+- Checklist, bullets, numbered list and emoji/sticker insertion helpers.
+- Local document attachment picker (retains document URI).
+- JSON import/export via Android's document picker. Import validates Notoora backup format and merges by note UUID/updated timestamp.
+- User-triggered Google Drive backup/sync code. It uses Google Identity authorization and the Drive API drive.file scope, and keeps one Notoora Backup.json file.
 
 ## Build
 
-Requires JDK 17 and Android SDK platform 35. Run: gradle --no-daemon :app:assembleDebug
+Requires JDK 17 and Android SDK platform 35. Run: gradle --no-daemon :app:assembleDebug.
 
-GitHub Actions builds app/build/outputs/apk/debug/app-debug.apk and uploads it as the Notoora-debug-apk workflow artifact after each push to main.
+A GitHub Actions workflow compiles app/build/outputs/apk/debug/app-debug.apk and uploads it as the Notoora-debug-apk artifact after every push to main.
 
 ## Configure Google Drive before testing sync
 
-Drive integration is implemented, but it cannot work until the developer configures Google's OAuth client and enables the Drive API:
+Drive integration needs developer setup before it can authenticate:
 
 1. Create/select a project in Google Cloud Console and enable Google Drive API.
-2. Configure the OAuth consent screen and add test users while the app is in testing mode.
+2. Configure the OAuth consent screen and add test users while in testing mode.
 3. Register an Android OAuth client for package com.nexauren.notoora, using the SHA-1 certificate fingerprint for the build being tested. Add the release signing fingerprint before publishing.
-4. Request only the https://www.googleapis.com/auth/drive.file scope used in code.
+4. Use the https://www.googleapis.com/auth/drive.file scope requested in code.
 5. Build and run on Android with Google Play services and an eligible Google account.
 
 Google may require OAuth verification before general public use. Never publish a private signing key or OAuth client secret in this repository.
 
-## Current boundaries and next work
+## Known limitations before public release
 
-This is the first engineering baseline, not yet a production release. The initial backup contains note text, labels, theme/background IDs, flags and attachment URI references. It does not yet package the actual bytes of attached media, so URI-based attachments do not automatically move between phones. Drive sync is user-triggered, not a background service. Before public release, add portable attachment packaging, a richer handwriting/drawing canvas with stroke persistence, reminders/notifications, home-screen widgets, per-note lock/biometrics, unit/UI tests, accessibility review and a signed release build.
+- Drive sync is user-triggered, not background sync.
+- Attachments currently store URI references; the backup does not yet package attachment bytes for full cross-device migration.
+- Handwriting/drawing strokes are saved, but this prototype has not yet added pressure sensitivity, eraser tools, or export-to-image.
+- Home-screen widgets, reminders/notifications, biometric lock, full localization, UI/unit tests, accessibility review, and a signed release build remain future work.
+- The name Notoora is provisional until store, trademark and domain availability checks are completed.
 
-The name Notoora is a working product name. Store, trademark and domain clearance should be completed before public release.
+This is a buildable engineering prototype, not yet a production release. Please test on real devices before distribution.

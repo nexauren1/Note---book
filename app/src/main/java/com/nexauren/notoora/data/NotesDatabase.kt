@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
 import org.json.JSONObject
 
-class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", null, 1) {
+class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE notes (
@@ -19,6 +19,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
                 theme_id INTEGER NOT NULL DEFAULT 0,
                 label TEXT NOT NULL DEFAULT '',
                 attachments_json TEXT NOT NULL DEFAULT '[]',
+                drawing_json TEXT NOT NULL DEFAULT '[]',
                 is_pinned INTEGER NOT NULL DEFAULT 0,
                 is_favorite INTEGER NOT NULL DEFAULT 0,
                 is_archived INTEGER NOT NULL DEFAULT 0,
@@ -29,7 +30,11 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
         )
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE notes ADD COLUMN drawing_json TEXT NOT NULL DEFAULT '[]'")
+        }
+    }
 
     fun getNotes(filter: NoteFilter = NoteFilter.ALL): List<Note> {
         val where = when (filter) {
@@ -39,10 +44,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
             NoteFilter.TRASH -> "is_deleted = 1"
         }
         val result = mutableListOf<Note>()
-        readableDatabase.query(
-            "notes", null, where, null, null, null,
-            "is_pinned DESC, updated_at DESC"
-        ).use { cursor ->
+        readableDatabase.query("notes", null, where, null, null, null, "is_pinned DESC, updated_at DESC").use { cursor ->
             while (cursor.moveToNext()) result += cursor.toNote()
         }
         return result
@@ -64,6 +66,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
             put("theme_id", note.themeId)
             put("label", note.label)
             put("attachments_json", note.attachmentsJson)
+            put("drawing_json", note.drawingJson)
             put("is_pinned", if (note.isPinned) 1 else 0)
             put("is_favorite", if (note.isFavorite) 1 else 0)
             put("is_archived", if (note.isArchived) 1 else 0)
@@ -78,8 +81,11 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
     @Synchronized
     fun mergeBackupJson(backup: String): Int {
         val root = JSONObject(backup)
+        if (root.optString("format") != "notoora-backup") {
+            throw IllegalArgumentException("This is not a Notoora backup file.")
+        }
         val rows = root.optJSONArray("notes")
-            ?: throw IllegalArgumentException("This is not a Notoora backup file.")
+            ?: throw IllegalArgumentException("The backup file does not contain notes.")
         var changed = 0
         val db = writableDatabase
         db.beginTransaction()
@@ -107,19 +113,10 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
         }
         return JSONObject()
             .put("format", "notoora-backup")
-            .put("schemaVersion", 1)
+            .put("schemaVersion", 2)
             .put("exportedAt", System.currentTimeMillis())
             .put("notes", rows)
             .toString(2)
-    }
-
-    fun addAttachment(noteId: String, uri: String) {
-        val note = getNote(noteId) ?: return
-        val values = JSONArray(note.attachmentsJson)
-        var exists = false
-        for (index in 0 until values.length()) if (values.optString(index) == uri) exists = true
-        if (!exists) values.put(uri)
-        save(note.copy(attachmentsJson = values.toString(), updatedAt = System.currentTimeMillis()))
     }
 
     private fun Cursor.toNote(): Note = Note(
@@ -130,6 +127,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
         themeId = getInt(getColumnIndexOrThrow("theme_id")),
         label = getString(getColumnIndexOrThrow("label")),
         attachmentsJson = getString(getColumnIndexOrThrow("attachments_json")),
+        drawingJson = getString(getColumnIndexOrThrow("drawing_json")),
         isPinned = getInt(getColumnIndexOrThrow("is_pinned")) == 1,
         isFavorite = getInt(getColumnIndexOrThrow("is_favorite")) == 1,
         isArchived = getInt(getColumnIndexOrThrow("is_archived")) == 1,

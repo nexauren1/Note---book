@@ -83,6 +83,7 @@ fun NoteEditorScreen(
     var draft by remember(note.id) { mutableStateOf(note) }
     var showBackgroundPicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
+    var showDrawingPad by remember { mutableStateOf(false) }
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showLabelEditor by remember { mutableStateOf(false) }
@@ -218,6 +219,11 @@ fun NoteEditorScreen(
                     }
                 }
 
+                if (draft.drawingJson.isNotBlank() && draft.drawingJson != "[]") {
+                    Surface(color = Color.White.copy(alpha = 0.72f), shape = RoundedCornerShape(12.dp), modifier = Modifier.padding(top = 10.dp)) {
+                        Text("✎ Sketch saved", modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp), style = MaterialTheme.typography.labelLarge)
+                    }
+                }
                 if (draft.label.isNotBlank()) {
                     Surface(
                         modifier = Modifier.padding(top = 12.dp),
@@ -236,6 +242,7 @@ fun NoteEditorScreen(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    TextButton(onClick = { showDrawingPad = true }) { Text("✎  Draw") }
                     TextButton(onClick = { showBackgroundPicker = true }) { Text("▤  Paper") }
                     TextButton(onClick = { showThemePicker = true }) { Text("◉  Theme") }
                     TextButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }) { Icon(Icons.Default.AttachFile, null); Spacer(Modifier.width(4.dp)); Text("Attach") }
@@ -246,6 +253,15 @@ fun NoteEditorScreen(
                 }
             }
         }
+    }
+
+    if (showDrawingPad) {
+        DrawingPad(
+            initialJson = draft.drawingJson,
+            paperId = draft.backgroundId,
+            onDismiss = { showDrawingPad = false },
+            onSave = { json -> draft = draft.copy(drawingJson = json, updatedAt = System.currentTimeMillis()) }
+        )
     }
 
     if (showBackgroundPicker) {
