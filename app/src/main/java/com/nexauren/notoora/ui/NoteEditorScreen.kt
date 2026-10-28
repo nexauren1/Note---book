@@ -84,6 +84,7 @@ fun NoteEditorScreen(
 ) {
     val context = LocalContext.current
     var draft by remember(note.id) { mutableStateOf(note) }
+    val editorPalette = NotePalettes.getOrElse(draft.themeId) { NotePalettes.first() }
     var showBackgroundPicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
     var showDrawingPad by remember { mutableStateOf(false) }
@@ -178,12 +179,17 @@ fun NoteEditorScreen(
                 }
             }
 
-            Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp)) {
+            Column(
+                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(editorPalette.card.copy(alpha = 0.94f))
+                    .padding(horizontal = 18.dp)
+            ) {
                 BasicTextField(
                     value = draft.title,
                     onValueChange = { draft = draft.copy(title = it) },
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 10.dp),
-                    textStyle = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF292631), fontWeight = FontWeight.SemiBold),
+                    textStyle = MaterialTheme.typography.headlineSmall.copy(color = editorPalette.ink, fontWeight = FontWeight.SemiBold),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { inner ->
                         Box {
@@ -198,7 +204,7 @@ fun NoteEditorScreen(
                     onValueChange = { draft = draft.copy(content = it) },
                     modifier = Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 250.dp).padding(top = 14.dp),
                     textStyle = TextStyle(
-                        color = Color(0xFF2F2A35),
+                        color = editorPalette.ink,
                         fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
                     ),
