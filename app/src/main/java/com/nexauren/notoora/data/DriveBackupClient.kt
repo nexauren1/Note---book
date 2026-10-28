@@ -10,7 +10,8 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 object DriveBackupClient {
-    private const val BACKUP_NAME = "Paperya Backup.json"
+    private const val BACKUP_NAME = "NoteFlow Backup.json"
+    private val LEGACY_BACKUP_NAMES = listOf("Paperya Backup.json", "Notoora Backup.json")
     private val http = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -50,22 +51,26 @@ object DriveBackupClient {
     }
 
     private fun findBackupId(token: String): String? {
-        val query = URLEncoder.encode("name = '" + BACKUP_NAME + "' and trashed = false", "UTF-8")
-        val request = Request.Builder()
-            .url("https://www.googleapis.com/drive/v3/files?q=" + query + "&spaces=drive&pageSize=100&fields=files(id,name,modifiedTime)")
-            .header("Authorization", "Bearer " + token)
-            .get()
-            .build()
-        return http.newCall(request).execute().use { response ->
-            val body = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw IllegalStateException("Google Drive returned HTTP " + response.code + ": " + body.take(220))
-            val files = JSONObject(body).optJSONArray("files") ?: return@use null
-            if (files.length() == 0) null else files.getJSONObject(0).optString("id").ifBlank { null }
+        for (name in listOf(BACKUP_NAME) + LEGACY_BACKUP_NAMES) {
+            val query = URLEncoder.encode("name = '" + name + "' and trashed = false", "UTF-8")
+            val request = Request.Builder()
+                .url("https://www.googleapis.com/drive/v3/files?q=" + query + "&spaces=drive&pageSize=20&orderBy=modifiedTime desc&fields=files(id,name,modifiedTime)")
+                .header("Authorization", "Bearer " + token)
+                .get()
+                .build()
+            val found = http.newCall(request).execute().use { response ->
+                val body = response.body?.string().orEmpty()
+                if (!response.isSuccessful) throw IllegalStateException("Google Drive returned HTTP " + response.code + ": " + body.take(220))
+                val files = JSONObject(body).optJSONArray("files")
+                if (files == null || files.length() == 0) null else files.getJSONObject(0).optString("id").ifBlank { null }
+            }
+            if (found != null) return found
         }
+        return null
     }
 
     private fun createBackup(token: String, json: String) {
-        val boundary = "paperya-" + UUID.randomUUID().toString()
+        val boundary = "noteflow-" + UUID.randomUUID().toString()
         val metadata = JSONObject().put("name", BACKUP_NAME).put("mimeType", "application/json").toString()
         val bodyText = "--" + boundary + "\r\n" +
             "Content-Type: application/json; charset=UTF-8\r\n\r\n" +

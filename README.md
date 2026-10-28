@@ -1,47 +1,39 @@
-# Paperya — Android notes, themes and paper
+# NoteFlow — creative notes for Android
 
-Paperya is a native Android note-taking app inspired by the workflow shown in the reference screenshots. The code, icon, palettes and paper patterns in this project are original; the reference app's brand and artwork are not copied.
+NoteFlow is a native Android note-taking prototype inspired by the broad workflow and customization ideas in the supplied reference screenshots. The implementation, brand identity, vector icon and procedural patterns are original; the reference app's name, code and artwork are not copied.
 
-## Included in the current prototype
+## Current features
 
-- Kotlin + Jetpack Compose Android UI.
-- Local-first notes stored in SQLite, with schema migration.
-- Auto-save, search across title/body/label, custom labels, favourites and pinning.
-- Archive and trash flows. Deleted notes remain as tombstones to carry deletions through backup merges.
-- 24 procedural paper presets generated at render time with Compose Canvas: plain, lined, grid, dots, gingham, confetti, leafy borders, gradients, stars and margin styles.
-- 12 color palettes for the app accent and note appearance.
-- Drawing canvas with selected ink colors, adjustable stroke width, undo and clear; strokes are saved as normalized points in each note and included in JSON/Drive backups.
-- Reminders with quick scheduling for one hour or the next morning, Android notifications, and reminder cancellation when a note is archived or moved to trash.
-- A resizable Android home-screen widget showing the latest note, plus a shortcut to create a fresh note.
-- Checklist, bullets, numbered list and emoji/sticker insertion helpers.
-- Local document attachment picker (retains document URI).
-- JSON import/export via Android's document picker. Import validates Paperya backup format and merges by note UUID/updated timestamp.
-- User-triggered Google Drive backup/sync code. It uses Google Identity authorization and the Drive API drive.file scope, and keeps one Paperya Backup.json file.
+- Native Android app built with Kotlin and Jetpack Compose.
+- Local-first notes in SQLite with schema migration and automatic saving.
+- Search, note labels, favorites, pinning, archiving, trash and restore.
+- 24 procedural paper presets drawn at runtime: plain, ruled, grid, dots, gingham, confetti, foliage, gradients, stars and margins.
+- Editor-only themes with coordinated page/card/text colors; paper backgrounds are a separate setting.
+- Choose a photo from the device gallery for a note background.
+- Drawing canvas with colored pen, adjustable width, undo and clear; saved strokes are serialized into note backups.
+- Checklist, bullet and numbered-list helpers, emoji/stickers and file attachments.
+- Ready-made and user-created labels with a dedicated label manager/page flow.
+- Reminders with quick scheduling for one hour or the next morning and Android notifications.
+- Resizable home-screen widget for the latest note and creating a note.
+- JSON backup import/export with ID-and-timestamp merge.
+- Google Drive user-triggered sync using Google Identity and the Drive API drive.file scope.
 
-## Build
+## Build and APK
 
-Requires JDK 17 and Android SDK platform 35. Run: gradle --no-daemon :app:assembleDebug.
+Requires JDK 17 and Android SDK platform 35. Run gradle --no-daemon :app:assembleDebug.
 
-A GitHub Actions workflow compiles app/build/outputs/apk/debug/app-debug.apk and uploads it as the Paperya-debug-apk artifact after every push to main.
+GitHub Actions compiles app/build/outputs/apk/debug/app-debug.apk and uploads it as the NoteFlow-debug-apk artifact after each push to main.
 
-## Configure Google Drive before testing sync
+## Google Drive setup and verification
 
-Drive integration needs developer setup before it can authenticate:
+Before Drive sync can work on your own account, configure a Google Cloud project and enable Google Drive API, set up the OAuth consent screen, and register an Android OAuth client for the current application package and signing certificate. Google may require consent-screen verification before public use. The app requests only https://www.googleapis.com/auth/drive.file.
 
-1. Create/select a project in Google Cloud Console and enable Google Drive API.
-2. Configure the OAuth consent screen and add test users while in testing mode.
-3. Register an Android OAuth client for package com.nexauren.paperya, using the SHA-1 certificate fingerprint for the build being tested. Add the release signing fingerprint before publishing.
-4. Use the https://www.googleapis.com/auth/drive.file scope requested in code.
-5. Build and run on Android with Google Play services and an eligible Google account.
+The code now searches for the new NoteFlow Backup.json file first and can still find older Paperya Backup.json / Notoora Backup.json names. This preserves compatibility with backups created by earlier test builds. A successful authorization prompt alone does not prove that synchronization completed; check the in-app status message after a sync.
 
-Google may require OAuth verification before general public use. Never publish a private signing key or OAuth client secret in this repository.
+## Limits before a public release
 
-## Known limitations before public release
-
+- The technical Android package identifier is still com.nexauren.paperya for continuity with the current prototype build; choose a final package ID before public release.
 - Drive sync is user-triggered, not background sync.
-- Attachments currently store URI references; the backup does not yet package attachment bytes for full cross-device migration.
-- Handwriting/drawing strokes are saved, but this prototype has not yet added pressure sensitivity, eraser tools, or export-to-image.
-- Biometric lock, advanced widget sizes/background customization, comprehensive accessibility review, UI/unit tests, and a signed release build remain future work. The main navigation, editor and settings now have a Portuguese/English selector; secondary system messages still need a full localization pass.
-- The name Paperya is provisional until store, trademark and domain availability checks are completed.
-
-This is a buildable engineering prototype, not yet a production release. Please test on real devices before distribution.
+- Local attachment URIs and custom wallpaper URIs are not yet packaged into the backup, so their actual files may not move to another device. This needs a portable media export/import layer.
+- Home-screen widget style customization, biometric lock, full UI/unit tests, broader accessibility checks and a signed release build remain to be completed.
+- Test the next APK on real devices before distribution.

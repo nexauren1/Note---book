@@ -91,8 +91,8 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
     @Synchronized
     fun mergeBackupJson(backup: String): Int {
         val root = JSONObject(backup)
-        if (root.optString("format") != "paperya-backup") {
-            throw IllegalArgumentException("This is not a Paperya backup file.")
+        if (root.optString("format") !in setOf("noteflow-backup", "paperya-backup", "notoora-backup")) {
+            throw IllegalArgumentException("This is not a supported NoteFlow backup file.")
         }
         val rows = root.optJSONArray("notes")
             ?: throw IllegalArgumentException("The backup file does not contain notes.")
@@ -122,7 +122,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
             while (cursor.moveToNext()) rows.put(cursor.toNote().toJson())
         }
         return JSONObject()
-            .put("format", "paperya-backup")
+            .put("format", "noteflow-backup")
             .put("schemaVersion", 4)
             .put("exportedAt", System.currentTimeMillis())
             .put("notes", rows)

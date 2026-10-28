@@ -5,10 +5,10 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@drawable/ic_paperya"
-        android:roundIcon="@drawable/ic_paperya"
+        android:icon="@drawable/ic_noteflow"
+        android:roundIcon="@drawable/ic_noteflow"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Paperya">
+        android:theme="@style/Theme.NoteFlow">
         <activity
             android:name=".MainActivity"
             android:exported="true"

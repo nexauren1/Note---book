@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
@@ -80,7 +82,10 @@ fun HomeScreen(
     isPortuguese: Boolean,
     labels: List<String> = emptyList(),
     selectedLabel: String? = null,
-    onLabelSelected: (String?) -> Unit = {}
+    onLabelSelected: (String?) -> Unit = {},
+    onLabelsClick: () -> Unit = {},
+    pageTitle: String? = null,
+    onNavigateBack: () -> Unit = {}
 ) {
     val palette = MaterialTheme.colorScheme
     var navigationMenuOpen by remember { mutableStateOf(false) }
@@ -100,6 +105,11 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (pageTitle != null) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = uiText(isPortuguese, "Voltar", "Back"))
+                    }
+                }
                 Box(
                     modifier = Modifier.size(44.dp).clip(RoundedCornerShape(15.dp))
                         .background(palette.primary),
@@ -109,8 +119,13 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.width(11.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Paperya", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                    Text(uiText(isPortuguese, "As tuas ideias, bem guardadas", "Your ideas, beautifully kept"), style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceVariant)
+                    Text(if (pageTitle == null) "NoteFlow" else labelDisplayName(pageTitle, isPortuguese), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (pageTitle == null) uiText(isPortuguese, "As tuas ideias, bem guardadas", "Your ideas, beautifully kept")
+                        else uiText(isPortuguese, "Notas com esta etiqueta", "Notes with this label"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.onSurfaceVariant
+                    )
                 }
                 Box {
                     IconButton(onClick = { navigationMenuOpen = true }) {
@@ -118,6 +133,7 @@ fun HomeScreen(
                     }
                     DropdownMenu(expanded = navigationMenuOpen, onDismissRequest = { navigationMenuOpen = false }) {
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Todas as notas", "All notes")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ALL); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Etiquetas", "Labels")) }, leadingIcon = { Icon(Icons.Default.LocalOffer, null) }, onClick = { navigationMenuOpen = false; onLabelsClick() })
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Favoritas", "Favorites")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.FAVORITES); onLabelSelected(null) })
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Arquivadas", "Archived")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ARCHIVED); onLabelSelected(null) })
                         DropdownMenuItem(text = { Text(uiText(isPortuguese, "Lixo", "Trash")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.TRASH); onLabelSelected(null) })
@@ -143,7 +159,8 @@ fun HomeScreen(
                 )
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            if (pageTitle == null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf(
                     NoteFilter.ALL to uiText(isPortuguese, "Todas", "All"),
                     NoteFilter.FAVORITES to uiText(isPortuguese, "Favoritas", "Favorites"),
@@ -156,16 +173,17 @@ fun HomeScreen(
                         label = { Text(title) }
                     )
                 }
+                }
             }
 
-            if (labels.isNotEmpty()) {
+            if (pageTitle == null && labels.isNotEmpty()) {
                 Text(uiText(isPortuguese, "ETIQUETAS", "LABELS"), style = MaterialTheme.typography.labelMedium, color = palette.onSurfaceVariant, fontWeight = FontWeight.Bold)
                 androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     item {
                         FilterChip(selected = selectedLabel == null, onClick = { onLabelSelected(null) }, label = { Text(uiText(isPortuguese, "Todas", "All")) })
                     }
                     items(labels, key = { it }) { label ->
-                        FilterChip(selected = selectedLabel == label, onClick = { onLabelSelected(label) }, label = { Text(label) })
+                        FilterChip(selected = selectedLabel == label, onClick = { onLabelSelected(label) }, label = { Text(labelDisplayName(label, isPortuguese)) })
                     }
                 }
             }
@@ -179,7 +197,7 @@ fun HomeScreen(
                                 NoteFilter.TRASH -> uiText(isPortuguese, "O lixo está vazio", "Your trash is empty")
                                 NoteFilter.ARCHIVED -> uiText(isPortuguese, "Ainda não tens notas arquivadas", "Nothing archived yet")
                                 NoteFilter.FAVORITES -> uiText(isPortuguese, "As tuas notas favoritas aparecerão aqui", "Your favorite notes will appear here")
-                                else -> uiText(isPortuguese, "Começa com uma pequena ideia", "Start with a little idea")
+                                else -> if (pageTitle != null) uiText(isPortuguese, "Ainda não há notas nesta etiqueta", "No notes in this label yet") else uiText(isPortuguese, "Começa com uma pequena ideia", "Start with a little idea")
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
@@ -212,8 +230,8 @@ fun HomeScreen(
 @Composable
 private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onAction: (NoteAction) -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
-    val darkPaper = note.backgroundId == 11 || note.backgroundId == 19
-    val ink = if (darkPaper) Color(0xFFF9F7FF) else Color(0xFF262633)
+    val notePalette = NotePalettes.getOrElse(note.themeId) { NotePalettes.first() }
+    val ink = notePalette.ink
     Card(
         modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp)
             .clip(RoundedCornerShape(19.dp)).clickable(onClick = onClick),
@@ -223,7 +241,10 @@ private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onA
     ) {
         Box {
             PaperBackground(note.backgroundId, Modifier.matchParentSize(), note.customBackgroundUri.takeIf { it.isNotBlank() })
-            Column(Modifier.fillMaxWidth().padding(13.dp)) {
+            Column(
+                Modifier.fillMaxWidth().padding(7.dp).clip(RoundedCornerShape(13.dp))
+                    .background(notePalette.page.copy(alpha = 0.98f)).padding(11.dp)
+            ) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
                         note.title.ifBlank { uiText(isPortuguese, "Nota sem título", "Untitled note") },

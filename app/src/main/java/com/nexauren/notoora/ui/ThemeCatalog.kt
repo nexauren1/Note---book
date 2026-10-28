@@ -39,9 +39,9 @@ enum class PaperPattern { PLAIN, RULED, GRID, DOTS, GINGHAM, CONFETTI, LEAVES, G
 
 val PaperPresets = listOf(
     PaperPreset("Clean white", "Plain", Color(0xFFFFFEFC), Color(0xFFE7E2DB), Color(0xFFFEFEFE), PaperPattern.PLAIN),
-    PaperPreset("Blue ruled", "Classic", Color(0xFFFFFEF8), Color(0xFF9CC6E8), Color(0xFF467FAC), PaperPattern.RULED),
-    PaperPreset("Graph paper", "Classic", Color(0xFFFEFEFC), Color(0xFFD5D8DC), Color(0xFF9AA4B2), PaperPattern.GRID),
-    PaperPreset("Soft dots", "Classic", Color(0xFFFFFCF8), Color(0xFFD9D4E8), Color(0xFFB9AED5), PaperPattern.DOTS),
+    PaperPreset("Blue ruled", "Common", Color(0xFFFFFEF8), Color(0xFF9CC6E8), Color(0xFF467FAC), PaperPattern.RULED),
+    PaperPreset("Graph paper", "Common", Color(0xFFFEFEFC), Color(0xFFD5D8DC), Color(0xFF9AA4B2), PaperPattern.GRID),
+    PaperPreset("Soft dots", "Common", Color(0xFFFFFCF8), Color(0xFFD9D4E8), Color(0xFFB9AED5), PaperPattern.DOTS),
     PaperPreset("Lilac grid", "Popular", Color(0xFFF8F5FF), Color(0xFFD5CBF1), Color(0xFF9B8AD8), PaperPattern.GRID),
     PaperPreset("Peach checks", "Popular", Color(0xFFFFF0E8), Color(0xFFF1B9B1), Color(0xFFEBA18E), PaperPattern.GINGHAM),
     PaperPreset("Mint confetti", "Popular", Color(0xFFF0FFF7), Color(0xFF80D5B1), Color(0xFFFFB66D), PaperPattern.CONFETTI),
@@ -50,8 +50,8 @@ val PaperPresets = listOf(
     PaperPreset("Rose garden", "Popular", Color(0xFFFFF0F4), Color(0xFFF3B8CB), Color(0xFFC86C9A), PaperPattern.LEAVES),
     PaperPreset("Meadow", "Popular", Color(0xFFF1FFE9), Color(0xFF7ECC76), Color(0xFFFFB55E), PaperPattern.CONFETTI),
     PaperPreset("Night sky", "Trending", Color(0xFF222A5A), Color(0xFF737EDD), Color(0xFFE7C8FF), PaperPattern.STARS),
-    PaperPreset("Cream notebook", "Classic", Color(0xFFFFF9E8), Color(0xFFDFCDA4), Color(0xFFB99E6A), PaperPattern.RULED),
-    PaperPreset("Aqua lines", "Plain", Color(0xFFEDFFFF), Color(0xFF9EDFE4), Color(0xFF5BB9C5), PaperPattern.RULED),
+    PaperPreset("Cream notebook", "Common", Color(0xFFFFF9E8), Color(0xFFDFCDA4), Color(0xFFB99E6A), PaperPattern.RULED),
+    PaperPreset("Aqua lines", "Common", Color(0xFFEDFFFF), Color(0xFF9EDFE4), Color(0xFF5BB9C5), PaperPattern.RULED),
     PaperPreset("Kraft paper", "Classic", Color(0xFFECD6B6), Color(0xFFCAAC80), Color(0xFF94714B), PaperPattern.DOTS),
     PaperPreset("Candy stripes", "Trending", Color(0xFFFFF3F8), Color(0xFFF5B7DB), Color(0xFFB3A0F1), PaperPattern.GRADIENT),
     PaperPreset("Starry lavender", "Popular", Color(0xFFF0EDFF), Color(0xFF9F8FEA), Color(0xFF4D4B9D), PaperPattern.STARS),

@@ -30,6 +30,7 @@ import com.nexauren.paperya.data.Note
 import com.nexauren.paperya.data.NoteFilter
 import com.nexauren.paperya.data.NotesDatabase
 import com.nexauren.paperya.ui.HomeScreen
+import com.nexauren.paperya.ui.LabelManagerScreen
 import com.nexauren.paperya.ui.NoteAction
 import com.nexauren.paperya.ui.NoteEditorScreen
 import com.nexauren.paperya.ui.PaperyaTheme
@@ -118,7 +119,7 @@ class MainActivity : ComponentActivity() {
                 onReminderChanged = { note -> scheduleReminder(note) },
                 onExport = {
                     pendingExportJson = database.exportBackupJson()
-                    exportBackupLauncher.launch("Paperya-backup.json")
+                    exportBackupLauncher.launch("NoteFlow-backup.json")
                 },
                 onImport = { importBackupLauncher.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
                 onDriveSync = { requestDriveAuthorization(DriveOperation.SYNC) },
@@ -186,12 +187,12 @@ class MainActivity : ComponentActivity() {
                             val remote = DriveBackupClient.downloadBackup(token)
                             if (remote != null) database.mergeBackupJson(remote)
                             DriveBackupClient.uploadBackup(token, database.exportBackupJson())
-                            if (remote == null) "Created your first Paperya backup in Drive"
+                            if (remote == null) "Created your first NoteFlow backup in Drive"
                             else "Drive sync completed; local and cloud notes were merged"
                         }
                         DriveOperation.RESTORE -> {
                             val remote = DriveBackupClient.downloadBackup(token)
-                                ?: throw IllegalStateException("No Paperya Backup.json file was found in this Drive account.")
+                                ?: throw IllegalStateException("No NoteFlow or previous-version backup was found in this Drive account.")
                             val changed = database.mergeBackupJson(remote)
                             "Merged " + changed + " notes from Google Drive"
                         }
@@ -220,8 +221,12 @@ private fun PaperyaRoot(
     onDriveSync: () -> Unit,
     onDriveRestore: () -> Unit
 ) {
-    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) { mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null) }
+    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) {
+        mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null)
+    }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var labelsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var activeLabelPage by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
     var selectedLabel by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
@@ -235,8 +240,25 @@ private fun PaperyaRoot(
     var isPortuguese by androidx.compose.runtime.saveable.rememberSaveable {
         mutableStateOf(preferences.getBoolean("isPortuguese", defaultPortuguese))
     }
-    var appThemeId by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
-    PaperyaTheme(paletteId = appThemeId) {
+    var customLabels by androidx.compose.runtime.remember {
+        mutableStateOf(preferences.getStringSet("custom_labels", emptySet())?.toSet() ?: emptySet())
+    }
+
+    val allNotes = androidx.compose.runtime.remember(refreshCounter) {
+        (database.getNotes(NoteFilter.ALL) + database.getNotes(NoteFilter.ARCHIVED) + database.getNotes(NoteFilter.TRASH))
+            .distinctBy { it.id }
+    }
+    val labels = androidx.compose.runtime.remember(allNotes, customLabels) {
+        (listOf("Trabalho", "Estudo", "Pessoal", "Ideias", "Tarefas") +
+            customLabels + allNotes.map { it.label }.filter { it.isNotBlank() })
+            .distinctBy { it.lowercase() }
+            .sortedBy { it.lowercase() }
+    }
+    val noteCounts = androidx.compose.runtime.remember(allNotes, labels) {
+        labels.associateWith { label -> allNotes.count { it.label.equals(label, ignoreCase = true) && !it.isDeleted } }
+    }
+
+    PaperyaTheme(paletteId = 0) {
         Surface(Modifier.fillMaxSize()) {
             when {
                 selectedNote != null -> {
@@ -266,46 +288,97 @@ private fun PaperyaRoot(
                 settingsOpen -> {
                     SettingsScreen(
                         driveStatus = driveStatus,
-                        appThemeId = appThemeId,
                         isPortuguese = isPortuguese,
                         onBack = { settingsOpen = false },
                         onExport = onExport,
                         onImport = onImport,
                         onDriveSync = onDriveSync,
                         onDriveRestore = onDriveRestore,
-                        onThemeChange = { appThemeId = it },
                         onLanguageChange = {
                             isPortuguese = it
                             preferences.edit().putBoolean("isPortuguese", it).apply()
                         }
                     )
                 }
-                else -> {
-                    val allNotes = androidx.compose.runtime.remember(refreshCounter) { database.getNotes(NoteFilter.ALL) + database.getNotes(NoteFilter.ARCHIVED) + database.getNotes(NoteFilter.TRASH) }
-                    val labels = androidx.compose.runtime.remember(allNotes) { (listOf("Trabalho", "Estudo", "Pessoal", "Ideias", "Tarefas") + allNotes.map { it.label }.filter { it.isNotBlank() }).distinct().sorted() }
-                    val notes = androidx.compose.runtime.remember(refreshCounter, currentFilter, search, selectedLabel) {
-                        database.getNotes(currentFilter).filter {
-                            (selectedLabel == null || it.label.equals(selectedLabel, ignoreCase = true)) &&
-                                (search.isBlank() || it.title.contains(search, ignoreCase = true) ||
-                                it.content.contains(search, ignoreCase = true) || it.label.contains(search, ignoreCase = true))
+                labelsOpen -> {
+                    LabelManagerScreen(
+                        labels = labels,
+                        customLabels = customLabels,
+                        noteCounts = noteCounts,
+                        isPortuguese = isPortuguese,
+                        onBack = { labelsOpen = false },
+                        onOpenLabel = { label ->
+                            labelsOpen = false
+                            activeLabelPage = label
+                            selectedLabel = label
+                            currentFilter = NoteFilter.ALL
+                            search = ""
+                        },
+                        onCreateLabel = { label ->
+                            val next = customLabels + label.trim()
+                            customLabels = next
+                            preferences.edit().putStringSet("custom_labels", next).apply()
+                        },
+                        onDeleteCustomLabel = { label ->
+                            val next = customLabels.filterNot { it.equals(label, ignoreCase = true) }.toSet()
+                            customLabels = next
+                            preferences.edit().putStringSet("custom_labels", next).apply()
+                            allNotes.filter { it.label.equals(label, ignoreCase = true) }.forEach {
+                                database.save(it.copy(label = "", updatedAt = System.currentTimeMillis()))
+                            }
+                            onRefresh()
                         }
+                    )
+                }
+                else -> {
+                    val notesForPage = if (activeLabelPage != null) {
+                        allNotes.filter { !it.isDeleted && !it.isArchived && it.label.equals(activeLabelPage, ignoreCase = true) }
+                    } else {
+                        database.getNotes(currentFilter).filter { selectedLabel == null || it.label.equals(selectedLabel, ignoreCase = true) }
+                    }
+                    val visibleNotes = notesForPage.filter {
+                        search.isBlank() || it.title.contains(search, ignoreCase = true) ||
+                            it.content.contains(search, ignoreCase = true) || it.label.contains(search, ignoreCase = true)
                     }
                     HomeScreen(
-                        notes = notes,
+                        notes = visibleNotes,
                         query = search,
                         onQueryChanged = { search = it },
                         filter = currentFilter,
-                        onFilterChanged = { currentFilter = it },
+                        onFilterChanged = { currentFilter = it; activeLabelPage = null; selectedLabel = null },
                         onCreate = {
-                            val note = database.save(Note())
+                            val note = database.save(Note(label = activeLabelPage.orEmpty()))
                             selectedNote = note
                         },
                         onOpen = { selectedNote = it },
                         onSettings = { settingsOpen = true },
                         isPortuguese = isPortuguese,
-                        labels = labels,
-                        selectedLabel = selectedLabel,
-                        onLabelSelected = { selectedLabel = it; currentFilter = NoteFilter.ALL },
+                        labels = if (activeLabelPage == null) labels else emptyList(),
+                        selectedLabel = activeLabelPage ?: selectedLabel,
+                        onLabelSelected = { label ->
+                            if (label == null) {
+                                activeLabelPage = null
+                                selectedLabel = null
+                                currentFilter = NoteFilter.ALL
+                            } else {
+                                activeLabelPage = label
+                                selectedLabel = label
+                                currentFilter = NoteFilter.ALL
+                                search = ""
+                            }
+                        },
+                        onLabelsClick = {
+                            labelsOpen = true
+                            activeLabelPage = null
+                            selectedLabel = null
+                        },
+                        pageTitle = activeLabelPage,
+                        onNavigateBack = {
+                            activeLabelPage = null
+                            selectedLabel = null
+                            currentFilter = NoteFilter.ALL
+                            search = ""
+                        },
                         onAction = { note, action ->
                             val updated = when (action) {
                                 NoteAction.PIN -> note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis())

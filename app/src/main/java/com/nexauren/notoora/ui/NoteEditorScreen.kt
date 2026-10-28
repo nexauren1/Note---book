@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
@@ -173,6 +175,26 @@ fun NoteEditorScreen(
                         text = { Text(uiText(isPortuguese, "Mover para o lixo", "Move to trash")) },
                         onClick = { showMenu = false; val deleted = draft.copy(isDeleted = true, updatedAt = System.currentTimeMillis()); onSave(deleted); onBack(deleted) }
                     )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Anexar ficheiro", "Attach file")) },
+                        onClick = { showMenu = false; attachmentPicker.launch(arrayOf("*/*")) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Lista de tarefas", "Checklist")) },
+                        onClick = { showMenu = false; draft = draft.copy(content = appendLine(draft.content, "☐ ")) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Lista com marcadores", "Bulleted list")) },
+                        onClick = { showMenu = false; draft = draft.copy(content = appendLine(draft.content, "• ")) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Lista numerada", "Numbered list")) },
+                        onClick = { showMenu = false; draft = draft.copy(content = appendLine(draft.content, "1. ")) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(uiText(isPortuguese, "Autocolantes e emojis", "Stickers and emoji")) },
+                        onClick = { showMenu = false; showEmojiPicker = true }
+                    )
                 }
                 IconButton(onClick = { onSave(draft.copy(updatedAt = System.currentTimeMillis())); onBack(draft) }) {
                     Icon(Icons.Default.Check, contentDescription = "Save", tint = MaterialTheme.colorScheme.primary)
@@ -180,9 +202,9 @@ fun NoteEditorScreen(
             }
 
             Column(
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp)
+                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(editorPalette.card.copy(alpha = 0.94f))
+                    .background(editorPalette.page.copy(alpha = 0.98f))
                     .padding(horizontal = 18.dp)
             ) {
                 BasicTextField(
@@ -198,7 +220,7 @@ fun NoteEditorScreen(
                         }
                     }
                 )
-                Divider(color = Color(0xFF8A8490).copy(alpha = 0.20f))
+                Divider(color = editorPalette.ink.copy(alpha = 0.18f))
                 BasicTextField(
                     value = draft.content,
                     onValueChange = { draft = draft.copy(content = it) },
@@ -267,21 +289,41 @@ fun NoteEditorScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            Surface(color = Color.White.copy(alpha = 0.96f), shadowElevation = 8.dp) {
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                color = editorPalette.card,
+                shape = RoundedCornerShape(20.dp),
+                shadowElevation = 7.dp
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp, vertical = 5.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { showDrawingPad = true }) { Text(uiText(isPortuguese, "✎  Desenhar", "✎  Draw")) }
-                    TextButton(onClick = { showBackgroundPicker = true }) { Text(uiText(isPortuguese, "▤  Papel", "▤  Paper")) }
-                    TextButton(onClick = { backgroundPhotoPicker.launch(arrayOf("image/*")) }) { Text(uiText(isPortuguese, "▧  Imagem de fundo", "▧  Photo background")) }
-                    TextButton(onClick = { showThemePicker = true }) { Text(uiText(isPortuguese, "◉  Tema", "◉  Theme")) }
-                    TextButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }) { Icon(Icons.Default.AttachFile, null); Spacer(Modifier.width(4.dp)); Text("Attach") }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }) { Text(uiText(isPortuguese, "☐  Lista", "☐  Checklist")) }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "• ")) }) { Text(uiText(isPortuguese, "•  Marcadores", "•  Bullets")) }
-                    TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "1. ")) }) { Text(uiText(isPortuguese, "1.  Numerada", "1.  Numbered")) }
-                    TextButton(onClick = { showEmojiPicker = true }) { Text(uiText(isPortuguese, "☺  Autocolantes", "☺  Stickers")) }
+                    TextButton(onClick = { showDrawingPad = true }, modifier = Modifier.weight(1f)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                            Text(uiText(isPortuguese, "Desenhar", "Draw"), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    TextButton(onClick = { showBackgroundPicker = true }, modifier = Modifier.weight(1f)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("▤", style = MaterialTheme.typography.titleMedium)
+                            Text(uiText(isPortuguese, "Papel", "Paper"), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    TextButton(onClick = { backgroundPhotoPicker.launch(arrayOf("image/*")) }, modifier = Modifier.weight(1f)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Image, contentDescription = null)
+                            Text(uiText(isPortuguese, "Foto", "Photo"), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    TextButton(onClick = { showThemePicker = true }, modifier = Modifier.weight(1f)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Palette, contentDescription = null)
+                            Text(uiText(isPortuguese, "Tema", "Theme"), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
             }
         }
@@ -304,7 +346,7 @@ fun NoteEditorScreen(
             title = { Text(uiText(isPortuguese, "Lembrete", "Reminder")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(uiText(isPortuguese, "Escolhe quando Paperya te deve lembrar desta nota.", "Choose when Paperya should remind you about this note."))
+                    Text(uiText(isPortuguese, "Escolhe quando NoteFlow te deve lembrar desta nota.", "Choose when NoteFlow should remind you about this note."))
                     if (draft.reminderAt > System.currentTimeMillis()) {
                         Text(uiText(isPortuguese, "Agendado: ", "Scheduled: ") + SimpleDateFormat("EEE, d MMM · HH:mm", if (isPortuguese) Locale("pt", "PT") else Locale.ENGLISH).format(Date(draft.reminderAt)), color = MaterialTheme.colorScheme.primary)
                     }
@@ -341,12 +383,13 @@ fun NoteEditorScreen(
             title = { Text(uiText(isPortuguese, "Escolhe o fundo", "Choose your paper")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                         listOf(
                             "Popular" to uiText(isPortuguese, "Popular", "Popular"),
-                            "Plain" to uiText(isPortuguese, "Simples", "Plain"),
-                            "Classic" to uiText(isPortuguese, "Clássico", "Classic"),
-                            "Trending" to uiText(isPortuguese, "Em destaque", "Trending")
+                            "Common" to uiText(isPortuguese, "Comum", "Common"),
+                            "Plain" to uiText(isPortuguese, "Plano", "Plain"),
+                            "Classic" to uiText(isPortuguese, "Clássica", "Classic"),
+                            "Trending" to uiText(isPortuguese, "Na moda", "Trending")
                         ).forEach { (tab, label) ->
                             FilterChip(selected = category == tab, onClick = { category = tab }, label = { Text(label, maxLines = 1) })
                         }
@@ -357,7 +400,7 @@ fun NoteEditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(PaperPresets.filter { it.category == category || category == "Popular" && (it.category == "Popular" || it.category == "Trending") }) { _, preset ->
+                        itemsIndexed(PaperPresets.filter { it.category == category }) { _, preset ->
                             val index = PaperPresets.indexOf(preset)
                             Column(
                                 modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable {

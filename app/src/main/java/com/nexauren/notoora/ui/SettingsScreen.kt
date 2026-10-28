@@ -1,20 +1,14 @@
 package com.nexauren.paperya.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,7 +16,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,148 +32,109 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingsScreen(
     driveStatus: String,
-    appThemeId: Int,
     isPortuguese: Boolean,
     onBack: () -> Unit,
     onExport: () -> Unit,
     onImport: () -> Unit,
     onDriveSync: () -> Unit,
     onDriveRestore: () -> Unit,
-    onThemeChange: (Int) -> Unit,
     onLanguageChange: (Boolean) -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(15.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = uiText(isPortuguese, "Voltar", "Back"))
             }
-            Text(uiText(isPortuguese, "Definições", "Settings"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Column(Modifier.weight(1f)) {
+                Text(uiText(isPortuguese, "Definições", "Settings"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(uiText(isPortuguese, "Personaliza a tua experiência", "Personalize your experience"), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+            }
         }
 
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(uiText(isPortuguese, "Idioma da aplicação", "App language"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(uiText(isPortuguese, "Escolhe o idioma da interface.", "Choose the interface language."), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Language, null, tint = colors.primary)
+                    Text("  " + uiText(isPortuguese, "Idioma", "Language"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                }
+                Text(uiText(isPortuguese, "Escolhe o idioma da interface.", "Choose the interface language."), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = isPortuguese,
-                        onClick = { onLanguageChange(true) },
-                        label = { Text("Português") }
-                    )
-                    FilterChip(
-                        selected = !isPortuguese,
-                        onClick = { onLanguageChange(false) },
-                        label = { Text("English") }
-                    )
+                    FilterChip(selected = isPortuguese, onClick = { onLanguageChange(true) }, label = { Text("Português") })
+                    FilterChip(selected = !isPortuguese, onClick = { onLanguageChange(false) }, label = { Text("English") })
                 }
             }
         }
 
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.FileDownload, null, tint = MaterialTheme.colorScheme.primary)
-                    Text(uiText(isPortuguese, "Cópia de segurança", "Portable backup"), modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Default.FileDownload, null, tint = colors.primary)
+                    Text("  " + uiText(isPortuguese, "Importar e exportar", "Import and export"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
                 Text(
-                    uiText(isPortuguese, "Exporta uma cópia JSON do Paperya ou importa-a mais tarde. A importação combina as notas e mantém a versão mais recente.", "Export a Paperya JSON backup or import one later. Import merges notes and keeps the newest version of each note."),
+                    uiText(isPortuguese, "Cria uma cópia JSON das tuas notas ou importa uma cópia anterior. Os desenhos e o texto são incluídos; os ficheiros anexados ainda não são transportados dentro da cópia.", "Export a JSON copy of your notes or import an earlier backup. Text and saved drawings are included; attached file bytes are not yet bundled."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colors.onSurfaceVariant
                 )
                 Button(onClick = onExport, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.FileDownload, null)
-                    Text(uiText(isPortuguese, "  Exportar notas", "  Export notes"))
+                    Text("  " + uiText(isPortuguese, "Exportar notas", "Export notes"))
                 }
                 OutlinedButton(onClick = onImport, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.FileUpload, null)
-                    Text(uiText(isPortuguese, "  Importar cópia", "  Import backup"))
+                    Text("  " + uiText(isPortuguese, "Importar cópia", "Import backup"))
                 }
             }
         }
 
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CloudSync, null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Google Drive", modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Default.CloudSync, null, tint = colors.primary)
+                    Text("  Google Drive", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
                 Text(
-                    uiText(isPortuguese, "Usa a tua conta Google para combinar alterações e guardar uma cópia Paperya no Drive.", "Use your Google account to merge the latest changes and keep one Paperya backup file in Drive."),
+                    uiText(isPortuguese, "Usa a tua conta Google para combinar as alterações com uma cópia no Drive. A primeira utilização requer a configuração OAuth da aplicação.", "Merge local changes with a backup in your Google Drive. First use requires OAuth setup for this app."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colors.onSurfaceVariant
                 )
-                Text(driveStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                Surface(color = colors.secondaryContainer, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Text(driveStatus, style = MaterialTheme.typography.bodySmall, color = colors.onSecondaryContainer, modifier = Modifier.padding(12.dp))
+                }
                 Button(onClick = onDriveSync, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.CloudSync, null)
-                    Text(uiText(isPortuguese, "  Sincronizar agora", "  Sync now"))
+                    Text("  " + uiText(isPortuguese, "Sincronizar agora", "Sync now"))
                 }
                 OutlinedButton(onClick = onDriveRestore, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.FileDownload, null)
-                    Text(uiText(isPortuguese, "  Combinar com o Google Drive", "  Merge from Google Drive"))
-                }
-                Text(
-                    uiText(isPortuguese, "A Drive API e a configuração OAuth desta aplicação têm de ser preparadas antes da primeira utilização.", "Drive setup requires the Drive API and OAuth consent configuration for this app before first use."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Palette, null, tint = MaterialTheme.colorScheme.primary)
-                    Text(uiText(isPortuguese, "Tema de cores da aplicação", "App accent theme"), modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                }
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 220.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    itemsIndexed(NotePalettes) { index, palette ->
-                        Column(
-                            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(
-                                if (appThemeId == index) palette.secondary else Color.Transparent
-                            ).padding(7.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(35.dp).clip(CircleShape),
-                                color = palette.primary,
-                                onClick = { onThemeChange(index) }
-                            ) {}
-                            Text(palette.name, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
-                        }
-                    }
+                    Text("  " + uiText(isPortuguese, "Recuperar do Drive", "Restore from Drive"))
                 }
             }
         }
 
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Security, null, tint = MaterialTheme.colorScheme.primary)
-                    Text(uiText(isPortuguese, "Privacidade em primeiro lugar", "Privacy first"), modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Default.Security, null, tint = colors.primary)
+                    Text("  " + uiText(isPortuguese, "Privacidade primeiro", "Privacy first"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
                 Text(
-                    uiText(isPortuguese, "As notas ficam primeiro no dispositivo. O acesso à Drive só é pedido quando escolhes uma ação de sincronização.", "Your notes are stored locally first. Drive access is requested only when you choose a Drive action."),
+                    uiText(isPortuguese, "As notas ficam no dispositivo por defeito. O acesso ao Drive é pedido apenas quando escolhes uma ação de sincronização.", "Notes stay on your device by default. Drive access is requested only when you choose a sync action."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colors.onSurfaceVariant
                 )
             }
         }
-        Spacer(Modifier.size(20.dp))
+        Spacer(Modifier.size(12.dp))
     }
 }

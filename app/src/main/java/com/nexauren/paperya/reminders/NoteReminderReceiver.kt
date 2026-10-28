@@ -18,14 +18,14 @@ class NoteReminderReceiver : BroadcastReceiver() {
         val note = runCatching { NotesDatabase(context.applicationContext).getNote(noteId) }.getOrNull() ?: return
         if (note.isDeleted || note.isArchived || note.reminderAt <= System.currentTimeMillis()) return
 
-        val title = note.title.ifBlank { "Paperya reminder" }
+        val title = note.title.ifBlank { "NoteFlow reminder" }
         val body = note.content.replace('\n', ' ').trim().take(180).ifBlank { "You wanted to come back to this note." }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, "Note reminders", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Reminders you set on your Paperya notes"
+                    description = "Reminders you set on your NoteFlow notes"
                 }
             )
         }
@@ -40,7 +40,7 @@ class NoteReminderReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_paperya)
+            .setSmallIcon(R.drawable.ic_noteflow)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))

@@ -4,7 +4,7 @@
     android:initialLayout="@layout/paperya_widget"
     android:minHeight="120dp"
     android:minWidth="220dp"
-    android:previewImage="@drawable/ic_paperya"
+    android:previewImage="@drawable/ic_noteflow"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />
