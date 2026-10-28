@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
@@ -284,7 +285,7 @@ fun HomeScreen(
                         color = palette.onSurfaceVariant
                     )
                 }
-Replace dropdown with drawer            }
+            }
 
             OutlinedTextField(
                 value = query,
