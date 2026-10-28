@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -265,6 +266,7 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onAction: (NoteAction) -> 
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.weight(1f)
                     )
+                    if (note.reminderAt > System.currentTimeMillis()) Icon(Icons.Default.Alarm, contentDescription = "Reminder", tint = ink, modifier = Modifier.size(14.dp))
                     if (note.isPinned) Icon(Icons.Default.PushPin, null, tint = ink, modifier = Modifier.size(14.dp))
                     if (note.isFavorite) Icon(Icons.Default.Favorite, null, tint = ink, modifier = Modifier.size(14.dp).padding(start = 2.dp))
                 }

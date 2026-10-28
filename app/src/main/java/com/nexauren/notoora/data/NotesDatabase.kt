@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
 import org.json.JSONObject
 
-class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", null, 2) {
+class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", null, 3) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE notes (
@@ -20,6 +20,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
                 label TEXT NOT NULL DEFAULT '',
                 attachments_json TEXT NOT NULL DEFAULT '[]',
                 drawing_json TEXT NOT NULL DEFAULT '[]',
+                reminder_at INTEGER NOT NULL DEFAULT 0,
                 is_pinned INTEGER NOT NULL DEFAULT 0,
                 is_favorite INTEGER NOT NULL DEFAULT 0,
                 is_archived INTEGER NOT NULL DEFAULT 0,
@@ -33,6 +34,9 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE notes ADD COLUMN drawing_json TEXT NOT NULL DEFAULT '[]'")
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE notes ADD COLUMN reminder_at INTEGER NOT NULL DEFAULT 0")
         }
     }
 
@@ -67,6 +71,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
             put("label", note.label)
             put("attachments_json", note.attachmentsJson)
             put("drawing_json", note.drawingJson)
+            put("reminder_at", note.reminderAt)
             put("is_pinned", if (note.isPinned) 1 else 0)
             put("is_favorite", if (note.isFavorite) 1 else 0)
             put("is_archived", if (note.isArchived) 1 else 0)
@@ -113,7 +118,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
         }
         return JSONObject()
             .put("format", "paperya-backup")
-            .put("schemaVersion", 2)
+            .put("schemaVersion", 3)
             .put("exportedAt", System.currentTimeMillis())
             .put("notes", rows)
             .toString(2)
@@ -128,6 +133,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", 
         label = getString(getColumnIndexOrThrow("label")),
         attachmentsJson = getString(getColumnIndexOrThrow("attachments_json")),
         drawingJson = getString(getColumnIndexOrThrow("drawing_json")),
+        reminderAt = getLong(getColumnIndexOrThrow("reminder_at")),
         isPinned = getInt(getColumnIndexOrThrow("is_pinned")) == 1,
         isFavorite = getInt(getColumnIndexOrThrow("is_favorite")) == 1,
         isArchived = getInt(getColumnIndexOrThrow("is_archived")) == 1,

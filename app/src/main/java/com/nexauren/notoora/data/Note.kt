@@ -12,6 +12,7 @@ data class Note(
     val label: String = "",
     val attachmentsJson: String = "[]",
     val drawingJson: String = "[]",
+    val reminderAt: Long = 0L,
     val isPinned: Boolean = false,
     val isFavorite: Boolean = false,
     val isArchived: Boolean = false,
@@ -28,6 +29,7 @@ data class Note(
         .put("label", label)
         .put("attachmentsJson", attachmentsJson)
         .put("drawingJson", drawingJson)
+        .put("reminderAt", reminderAt)
         .put("isPinned", isPinned)
         .put("isFavorite", isFavorite)
         .put("isArchived", isArchived)
@@ -45,6 +47,7 @@ data class Note(
             label = json.optString("label"),
             attachmentsJson = json.optString("attachmentsJson", "[]"),
             drawingJson = json.optString("drawingJson", "[]"),
+            reminderAt = json.optLong("reminderAt", 0L),
             isPinned = json.optBoolean("isPinned", false),
             isFavorite = json.optBoolean("isFavorite", false),
             isArchived = json.optBoolean("isArchived", false),

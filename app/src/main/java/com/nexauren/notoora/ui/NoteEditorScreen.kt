@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Check
@@ -70,6 +71,7 @@ import com.nexauren.paperya.data.Note
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -84,6 +86,7 @@ fun NoteEditorScreen(
     var showBackgroundPicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
     var showDrawingPad by remember { mutableStateOf(false) }
+    var showReminderDialog by remember { mutableStateOf(false) }
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showLabelEditor by remember { mutableStateOf(false) }
@@ -103,7 +106,7 @@ fun NoteEditorScreen(
         }
     }
 
-    LaunchedEffect(draft.title, draft.content, draft.backgroundId, draft.themeId, draft.label, draft.attachmentsJson, draft.isPinned, draft.isFavorite) {
+    LaunchedEffect(draft.title, draft.content, draft.backgroundId, draft.themeId, draft.label, draft.attachmentsJson, draft.drawingJson, draft.reminderAt, draft.isPinned, draft.isFavorite, draft.isArchived, draft.isDeleted) {
         delay(450)
         onSave(draft.copy(updatedAt = System.currentTimeMillis()))
     }
@@ -124,6 +127,9 @@ fun NoteEditorScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF74717B)
                     )
+                }
+                IconButton(onClick = { showReminderDialog = true }) {
+                    Icon(Icons.Default.Alarm, contentDescription = "Set reminder", tint = if (draft.reminderAt > System.currentTimeMillis()) MaterialTheme.colorScheme.primary else Color.Unspecified)
                 }
                 IconButton(onClick = { showThemePicker = true }) {
                     Icon(Icons.Default.Palette, contentDescription = "Choose theme")
@@ -195,6 +201,15 @@ fun NoteEditorScreen(
                     }
                 )
 
+                if (draft.reminderAt > 0L) {
+                    Surface(color = Color.White.copy(alpha = 0.72f), shape = RoundedCornerShape(12.dp), modifier = Modifier.padding(top = 10.dp)) {
+                        Text(
+                            "⏰ Reminder: " + SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault()).format(Date(draft.reminderAt)),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
                 val attachments = runCatching { JSONArray(draft.attachmentsJson) }.getOrElse { JSONArray() }
                 if (attachments.length() > 0) {
                     Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -261,6 +276,43 @@ fun NoteEditorScreen(
             paperId = draft.backgroundId,
             onDismiss = { showDrawingPad = false },
             onSave = { json -> draft = draft.copy(drawingJson = json, updatedAt = System.currentTimeMillis()) }
+        )
+    }
+
+    if (showReminderDialog) {
+        AlertDialog(
+            onDismissRequest = { showReminderDialog = false },
+            title = { Text("Reminder") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Choose when Paperya should remind you about this note.")
+                    if (draft.reminderAt > System.currentTimeMillis()) {
+                        Text("Scheduled: " + SimpleDateFormat("EEE, MMM d · HH:mm", Locale.getDefault()).format(Date(draft.reminderAt)), color = MaterialTheme.colorScheme.primary)
+                    }
+                    TextButton(onClick = {
+                        draft = draft.copy(reminderAt = System.currentTimeMillis() + 60L * 60L * 1000L, updatedAt = System.currentTimeMillis())
+                        showReminderDialog = false
+                    }) { Text("In one hour") }
+                    TextButton(onClick = {
+                        val tomorrow = Calendar.getInstance().apply {
+                            add(Calendar.DAY_OF_YEAR, 1)
+                            set(Calendar.HOUR_OF_DAY, 9)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        draft = draft.copy(reminderAt = tomorrow.timeInMillis, updatedAt = System.currentTimeMillis())
+                        showReminderDialog = false
+                    }) { Text("Tomorrow at 09:00") }
+                    if (draft.reminderAt > 0L) {
+                        TextButton(onClick = {
+                            draft = draft.copy(reminderAt = 0L, updatedAt = System.currentTimeMillis())
+                            showReminderDialog = false
+                        }) { Text("Clear reminder") }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showReminderDialog = false }) { Text("Close") } }
         )
     }
 

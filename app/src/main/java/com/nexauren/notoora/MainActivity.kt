@@ -1,6 +1,12 @@
 package com.nexauren.paperya
 
+import android.Manifest
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +33,7 @@ import com.nexauren.paperya.ui.NoteAction
 import com.nexauren.paperya.ui.NoteEditorScreen
 import com.nexauren.paperya.ui.PaperyaTheme
 import com.nexauren.paperya.ui.SettingsScreen
+import com.nexauren.paperya.reminders.NoteReminderReceiver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,6 +46,10 @@ class MainActivity : ComponentActivity() {
     private var pendingDriveOperation = DriveOperation.SYNC
     private var refreshCounter by mutableIntStateOf(0)
     private var driveStatus by mutableStateOf("Not connected yet")
+
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted) driveStatus = "Reminder saved, but notifications are disabled. Enable them in Android settings."
+    }
 
     private val exportBackupLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) {
@@ -97,7 +108,9 @@ class MainActivity : ComponentActivity() {
                 database = database,
                 refreshCounter = refreshCounter,
                 driveStatus = driveStatus,
+                initialOpenNoteId = intent.getStringExtra(NoteReminderReceiver.EXTRA_NOTE_ID),
                 onRefresh = { refreshCounter++ },
+                onReminderChanged = { note -> scheduleReminder(note) },
                 onExport = {
                     pendingExportJson = database.exportBackupJson()
                     exportBackupLauncher.launch("Paperya-backup.json")
@@ -107,6 +120,29 @@ class MainActivity : ComponentActivity() {
                 onDriveRestore = { requestDriveAuthorization(DriveOperation.RESTORE) }
             )
         }
+    }
+
+    private fun scheduleReminder(note: Note) {
+        val alarmManager = getSystemService(AlarmManager::class.java)
+        val alarmIntent = Intent(this, NoteReminderReceiver::class.java).apply {
+            putExtra(NoteReminderReceiver.EXTRA_NOTE_ID, note.id)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            note.id.hashCode(),
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (note.reminderAt <= System.currentTimeMillis() || note.isDeleted || note.isArchived) {
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, note.reminderAt, pendingIntent)
     }
 
     private fun requestDriveAuthorization(operation: DriveOperation) {
@@ -170,13 +206,15 @@ private fun PaperyaRoot(
     database: NotesDatabase,
     refreshCounter: Int,
     driveStatus: String,
+    initialOpenNoteId: String?,
     onRefresh: () -> Unit,
+    onReminderChanged: (Note) -> Unit,
     onExport: () -> Unit,
     onImport: () -> Unit,
     onDriveSync: () -> Unit,
     onDriveRestore: () -> Unit
 ) {
-    var selectedNote by androidx.compose.runtime.remember { mutableStateOf<Note?>(null) }
+    var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId) { mutableStateOf(initialOpenNoteId?.let { database.getNote(it) }) }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
@@ -188,12 +226,20 @@ private fun PaperyaRoot(
                     NoteEditorScreen(
                         note = selectedNote!!,
                         onSave = { note ->
+                            val previous = selectedNote
                             database.save(note)
+                            if (previous?.reminderAt != note.reminderAt || previous?.isArchived != note.isArchived || previous?.isDeleted != note.isDeleted) {
+                                onReminderChanged(note)
+                            }
                             selectedNote = note
                             onRefresh()
                         },
                         onBack = { note ->
+                            val previous = selectedNote
                             database.save(note)
+                            if (previous?.reminderAt != note.reminderAt || previous?.isArchived != note.isArchived || previous?.isDeleted != note.isDeleted) {
+                                onReminderChanged(note)
+                            }
                             selectedNote = null
                             onRefresh()
                         }
@@ -240,6 +286,7 @@ private fun PaperyaRoot(
                                 NoteAction.RESTORE -> note.copy(isDeleted = false, isArchived = false, updatedAt = System.currentTimeMillis())
                             }
                             database.save(updated)
+                            if (note.reminderAt != updated.reminderAt || note.isArchived != updated.isArchived || note.isDeleted != updated.isDeleted) onReminderChanged(updated)
                             onRefresh()
                         }
                     )
