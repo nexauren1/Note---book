@@ -450,6 +450,17 @@ fun NoteEditorScreen(
                         unfocusedContainerColor = Color.Transparent
                     )
                 )
+                Text(uiText(isPortuguese, "Etiquetas prontas", "Quick labels"), style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("Trabalho", "Estudo", "Pessoal").forEach { readyLabel ->
+                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(readyLabel) })
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("Ideias", "Tarefas").forEach { readyLabel ->
+                        FilterChip(selected = labelDraft == readyLabel, onClick = { labelDraft = readyLabel }, label = { Text(readyLabel) })
+                    }
+                }
             },
             confirmButton = {
                 Button(onClick = {
