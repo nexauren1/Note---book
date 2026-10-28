@@ -14,7 +14,7 @@ NoteFlow is a native Android note-taking prototype inspired by the broad workflo
 - Checklist, bullet and numbered-list helpers, emoji/stickers and file attachments.
 - Ready-made and user-created labels with a dedicated label manager/page flow.
 - Reminders with quick scheduling for one hour or the next morning and Android notifications.
-- Resizable home-screen widget for the latest note and creating a note.
+- Resizable home-screen widget for the latest note and creating a note, with 8 selectable color-gradient themes.
 - JSON backup import/export with ID-and-timestamp merge.
 - Google Drive user-triggered sync using Google Identity and the Drive API drive.file scope.
 
@@ -35,5 +35,5 @@ The code now searches for the new NoteFlow Backup.json file first and can still 
 - The technical Android package identifier is still com.nexauren.paperya for continuity with the current prototype build; choose a final package ID before public release.
 - Drive sync is user-triggered, not background sync.
 - Local attachment URIs and custom wallpaper URIs are not yet packaged into the backup, so their actual files may not move to another device. This needs a portable media export/import layer.
-- Home-screen widget style customization, biometric lock, full UI/unit tests, broader accessibility checks and a signed release build remain to be completed.
+- Biometric lock, full UI/unit tests, broader accessibility checks, portable media backup and a signed release build remain to be completed.
 - Test the next APK on real devices before distribution.

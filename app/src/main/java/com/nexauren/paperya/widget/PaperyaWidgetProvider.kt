@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import com.nexauren.paperya.MainActivity
 import com.nexauren.paperya.R
 import com.nexauren.paperya.data.NotesDatabase
+import com.nexauren.paperya.ui.WidgetThemeCatalog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -19,6 +20,17 @@ class PaperyaWidgetProvider : AppWidgetProvider() {
         val note = runCatching { NotesDatabase(context.applicationContext).getNotes().firstOrNull() }.getOrNull()
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.paperya_widget)
+            val themeId = context.getSharedPreferences("paperya_settings", Context.MODE_PRIVATE)
+                .getInt("widget_theme", 0)
+            val theme = WidgetThemeCatalog.get(themeId)
+            views.setInt(R.id.widget_card, "setBackgroundResource", theme.cardDrawable)
+            views.setInt(R.id.widget_header, "setBackgroundResource", theme.headerDrawable)
+            views.setInt(R.id.widget_new_note, "setBackgroundResource", theme.headerDrawable)
+            views.setTextColor(R.id.widget_brand, theme.accentColor.toInt())
+            views.setTextColor(R.id.widget_note_title, theme.titleColor.toInt())
+            views.setTextColor(R.id.widget_note_preview, theme.bodyColor.toInt())
+            views.setTextColor(R.id.widget_updated, theme.mutedColor.toInt())
+            views.setTextColor(R.id.widget_open_app, theme.accentColor.toInt())
             views.setTextViewText(R.id.widget_note_title, note?.title?.ifBlank { "A little idea" } ?: "Your notes, beautifully kept")
             views.setTextViewText(
                 R.id.widget_note_preview,

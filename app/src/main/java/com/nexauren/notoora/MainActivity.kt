@@ -35,6 +35,7 @@ import com.nexauren.paperya.ui.NoteAction
 import com.nexauren.paperya.ui.NoteEditorScreen
 import com.nexauren.paperya.ui.PaperyaTheme
 import com.nexauren.paperya.ui.SettingsScreen
+import com.nexauren.paperya.ui.WidgetCustomizationScreen
 import com.nexauren.paperya.widget.PaperyaWidgetProvider
 import com.nexauren.paperya.reminders.NoteReminderReceiver
 import kotlinx.coroutines.Dispatchers
@@ -123,7 +124,8 @@ class MainActivity : ComponentActivity() {
                 },
                 onImport = { importBackupLauncher.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
                 onDriveSync = { requestDriveAuthorization(DriveOperation.SYNC) },
-                onDriveRestore = { requestDriveAuthorization(DriveOperation.RESTORE) }
+                onDriveRestore = { requestDriveAuthorization(DriveOperation.RESTORE) },
+                onWidgetThemeChanged = { PaperyaWidgetProvider.updateAll(this@MainActivity) }
             )
         }
     }
@@ -219,12 +221,14 @@ private fun PaperyaRoot(
     onExport: () -> Unit,
     onImport: () -> Unit,
     onDriveSync: () -> Unit,
-    onDriveRestore: () -> Unit
+    onDriveRestore: () -> Unit,
+    onWidgetThemeChanged: (Int) -> Unit
 ) {
     var selectedNote by androidx.compose.runtime.remember(initialOpenNoteId, startWithNewNote) {
         mutableStateOf(initialOpenNoteId?.let { database.getNote(it) } ?: if (startWithNewNote) database.save(Note()) else null)
     }
     var settingsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var widgetCustomizationOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var labelsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     var activeLabelPage by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
@@ -233,6 +237,9 @@ private fun PaperyaRoot(
     val context = LocalContext.current
     val preferences = androidx.compose.runtime.remember(context) {
         context.getSharedPreferences("paperya_settings", android.content.Context.MODE_PRIVATE)
+    }
+    var widgetThemeId by androidx.compose.runtime.remember {
+        mutableIntStateOf(preferences.getInt("widget_theme", 0))
     }
     val defaultPortuguese = androidx.compose.runtime.remember(context) {
         context.resources.configuration.locales[0].language == "pt"
@@ -285,6 +292,23 @@ private fun PaperyaRoot(
                         }
                     )
                 }
+                widgetCustomizationOpen -> {
+                    WidgetCustomizationScreen(
+                        selectedThemeId = widgetThemeId,
+                        isPortuguese = isPortuguese,
+                        onBack = {
+                            widgetCustomizationOpen = false
+                            settingsOpen = true
+                        },
+                        onApply = { themeId ->
+                            widgetThemeId = themeId
+                            preferences.edit().putInt("widget_theme", themeId).apply()
+                            onWidgetThemeChanged(themeId)
+                            widgetCustomizationOpen = false
+                            settingsOpen = true
+                        }
+                    )
+                }
                 settingsOpen -> {
                     SettingsScreen(
                         driveStatus = driveStatus,
@@ -294,6 +318,10 @@ private fun PaperyaRoot(
                         onImport = onImport,
                         onDriveSync = onDriveSync,
                         onDriveRestore = onDriveRestore,
+                        onCustomizeWidget = {
+                            settingsOpen = false
+                            widgetCustomizationOpen = true
+                        },
                         onLanguageChange = {
                             isPortuguese = it
                             preferences.edit().putBoolean("isPortuguese", it).apply()

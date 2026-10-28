@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -44,6 +45,7 @@ fun SettingsScreen(
     onImport: () -> Unit,
     onDriveSync: () -> Unit,
     onDriveRestore: () -> Unit,
+    onCustomizeWidget: () -> Unit,
     onLanguageChange: (Boolean) -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
@@ -71,6 +73,24 @@ fun SettingsScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = isPortuguese, onClick = { onLanguageChange(true) }, label = { Text("Português") })
                     FilterChip(selected = !isPortuguese, onClick = { onLanguageChange(false) }, label = { Text("English") })
+                }
+            }
+        }
+
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Palette, null, tint = colors.primary)
+                    Text("  " + uiText(isPortuguese, "Personalizar widget", "Customize widget"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                }
+                Text(
+                    uiText(isPortuguese, "Escolhe cores e gradientes para combinar o widget com o teu estilo.", "Choose colors and gradients to match your home-screen widget to your style."),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant
+                )
+                OutlinedButton(onClick = onCustomizeWidget, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.Palette, null)
+                    Text("  " + uiText(isPortuguese, "Abrir personalização", "Open customization"))
                 }
             }
         }
