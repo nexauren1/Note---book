@@ -1,6 +1,7 @@
 package com.nexauren.paperya.ui
 
 import androidx.compose.foundation.Canvas
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,13 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 
 @Composable
-fun PaperBackground(presetId: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit = {}) {
+fun PaperBackground(presetId: Int, modifier: Modifier = Modifier, customImageUri: String? = null, content: @Composable () -> Unit = {}) {
     val preset = PaperPresets.getOrElse(presetId) { PaperPresets.first() }
     Box(modifier = modifier) {
         Canvas(Modifier.fillMaxSize()) {
@@ -110,6 +112,14 @@ fun PaperBackground(presetId: Int, modifier: Modifier = Modifier, content: @Comp
                     drawLine(preset.second.copy(alpha = 0.62f), Offset(size.width - 26.dp.toPx(), 0f), Offset(size.width - 26.dp.toPx(), size.height), 1.5.dp.toPx())
                 }
             }
+        }
+        if (!customImageUri.isNullOrBlank()) {
+            AsyncImage(
+                model = customImageUri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
         }
         Box(Modifier.fillMaxSize()) { content() }
     }

@@ -94,6 +94,15 @@ fun NoteEditorScreen(
     var category by remember { mutableStateOf("Popular") }
     var labelDraft by remember(draft.id) { mutableStateOf(draft.label) }
 
+    val backgroundPhotoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            draft = draft.copy(customBackgroundUri = uri.toString(), updatedAt = System.currentTimeMillis())
+        }
+    }
+
     val attachmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
             runCatching {
@@ -107,13 +116,13 @@ fun NoteEditorScreen(
         }
     }
 
-    LaunchedEffect(draft.title, draft.content, draft.backgroundId, draft.themeId, draft.label, draft.attachmentsJson, draft.drawingJson, draft.reminderAt, draft.isPinned, draft.isFavorite, draft.isArchived, draft.isDeleted) {
+    LaunchedEffect(draft.title, draft.content, draft.backgroundId, draft.themeId, draft.label, draft.attachmentsJson, draft.drawingJson, draft.customBackgroundUri, draft.reminderAt, draft.isPinned, draft.isFavorite, draft.isArchived, draft.isDeleted) {
         delay(450)
         onSave(draft.copy(updatedAt = System.currentTimeMillis()))
     }
 
     Box(Modifier.fillMaxSize()) {
-        PaperBackground(draft.backgroundId, Modifier.fillMaxSize())
+        PaperBackground(draft.backgroundId, Modifier.fillMaxSize(), draft.customBackgroundUri.takeIf { it.isNotBlank() })
         Column(Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
@@ -258,8 +267,9 @@ fun NoteEditorScreen(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { showDrawingPad = true }) { Text("✎  Draw") }
+                    TextButton(onClick = { showDrawingPad = true }) { Text(uiText(isPortuguese, "✎  Desenhar", "✎  Draw")) }
                     TextButton(onClick = { showBackgroundPicker = true }) { Text(uiText(isPortuguese, "▤  Papel", "▤  Paper")) }
+                    TextButton(onClick = { backgroundPhotoPicker.launch(arrayOf("image/*")) }) { Text(uiText(isPortuguese, "▧  Imagem de fundo", "▧  Photo background")) }
                     TextButton(onClick = { showThemePicker = true }) { Text(uiText(isPortuguese, "◉  Tema", "◉  Theme")) }
                     TextButton(onClick = { attachmentPicker.launch(arrayOf("*/*")) }) { Icon(Icons.Default.AttachFile, null); Spacer(Modifier.width(4.dp)); Text("Attach") }
                     TextButton(onClick = { draft = draft.copy(content = appendLine(draft.content, "☐ ")) }) { Text(uiText(isPortuguese, "☐  Lista", "☐  Checklist")) }
@@ -275,6 +285,7 @@ fun NoteEditorScreen(
         DrawingPad(
             initialJson = draft.drawingJson,
             paperId = draft.backgroundId,
+            customImageUri = draft.customBackgroundUri.takeIf { it.isNotBlank() },
             isPortuguese = isPortuguese,
             onDismiss = { showDrawingPad = false },
             onSave = { json -> draft = draft.copy(drawingJson = json, updatedAt = System.currentTimeMillis()) }
@@ -344,7 +355,7 @@ fun NoteEditorScreen(
                             val index = PaperPresets.indexOf(preset)
                             Column(
                                 modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable {
-                                    draft = draft.copy(backgroundId = index, updatedAt = System.currentTimeMillis())
+                                    draft = draft.copy(backgroundId = index, customBackgroundUri = "", updatedAt = System.currentTimeMillis())
                                     showBackgroundPicker = false
                                 },
                                 horizontalAlignment = Alignment.CenterHorizontally

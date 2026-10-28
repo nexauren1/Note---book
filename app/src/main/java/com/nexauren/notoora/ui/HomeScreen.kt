@@ -195,7 +195,7 @@ private fun NoteCard(note: Note, isPortuguese: Boolean, onClick: () -> Unit, onA
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Box {
-            PaperBackground(note.backgroundId, Modifier.matchParentSize())
+            PaperBackground(note.backgroundId, Modifier.matchParentSize(), note.customBackgroundUri.takeIf { it.isNotBlank() })
             Column(Modifier.fillMaxWidth().padding(13.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(

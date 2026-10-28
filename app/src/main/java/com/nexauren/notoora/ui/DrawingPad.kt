@@ -59,6 +59,7 @@ private data class InkStroke(val color: Int, val width: Float, val points: List<
 fun DrawingPad(
     initialJson: String,
     paperId: Int,
+    customImageUri: String?,
     isPortuguese: Boolean,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
@@ -99,7 +100,7 @@ fun DrawingPad(
                 Box(
                     Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(18.dp))
                 ) {
-                    PaperBackground(paperId, Modifier.fillMaxSize())
+                    PaperBackground(paperId, Modifier.fillMaxSize(), customImageUri)
                     Canvas(
                         Modifier.fillMaxSize().pointerInput(activeColor, strokeWidth) {
                             detectDragGestures(
