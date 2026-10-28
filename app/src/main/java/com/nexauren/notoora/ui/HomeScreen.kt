@@ -76,9 +76,13 @@ fun HomeScreen(
     onOpen: (Note) -> Unit,
     onSettings: () -> Unit,
     onAction: (Note, NoteAction) -> Unit,
-    isPortuguese: Boolean
+    isPortuguese: Boolean,
+    labels: List<String> = emptyList(),
+    selectedLabel: String? = null,
+    onLabelSelected: (String?) -> Unit = {}
 ) {
     val palette = MaterialTheme.colorScheme
+    var navigationMenuOpen by remember { mutableStateOf(false) }
     Scaffold(
         containerColor = palette.background,
         floatingActionButton = {
@@ -107,8 +111,18 @@ fun HomeScreen(
                     Text("Paperya", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Text(uiText(isPortuguese, "As tuas ideias, bem guardadas", "Your ideas, beautifully kept"), style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceVariant)
                 }
-                IconButton(onClick = onSettings) {
-                    Icon(Icons.Default.Settings, contentDescription = uiText(isPortuguese, "Definições", "Settings"))
+                Box {
+                    IconButton(onClick = { navigationMenuOpen = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = uiText(isPortuguese, "Menu", "Menu"))
+                    }
+                    DropdownMenu(expanded = navigationMenuOpen, onDismissRequest = { navigationMenuOpen = false }) {
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Todas as notas", "All notes")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ALL); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Favoritas", "Favorites")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.FAVORITES); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Arquivadas", "Archived")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.ARCHIVED); onLabelSelected(null) })
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Lixo", "Trash")) }, onClick = { navigationMenuOpen = false; onFilterChanged(NoteFilter.TRASH); onLabelSelected(null) })
+                        Divider()
+                        DropdownMenuItem(text = { Text(uiText(isPortuguese, "Definições", "Settings")) }, leadingIcon = { Icon(Icons.Default.Settings, null) }, onClick = { navigationMenuOpen = false; onSettings() })
+                    }
                 }
             }
 
@@ -140,6 +154,18 @@ fun HomeScreen(
                         onClick = { onFilterChanged(item) },
                         label = { Text(title) }
                     )
+                }
+            }
+
+            if (labels.isNotEmpty()) {
+                Text(uiText(isPortuguese, "ETIQUETAS", "LABELS"), style = MaterialTheme.typography.labelMedium, color = palette.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    item {
+                        FilterChip(selected = selectedLabel == null, onClick = { onLabelSelected(null) }, label = { Text(uiText(isPortuguese, "Todas", "All")) })
+                    }
+                    items(labels, key = { it }) { label ->
+                        FilterChip(selected = selectedLabel == label, onClick = { onLabelSelected(label) }, label = { Text(label) })
+                    }
                 }
             }
 
