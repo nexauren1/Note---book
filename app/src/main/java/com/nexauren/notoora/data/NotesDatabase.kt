@@ -1,4 +1,4 @@
-package com.nexauren.notoora.data
+package com.nexauren.paperya.data
 
 import android.content.ContentValues
 import android.content.Context
@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
 import org.json.JSONObject
 
-class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", null, 2) {
+class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "paperya.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE notes (
@@ -81,8 +81,8 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
     @Synchronized
     fun mergeBackupJson(backup: String): Int {
         val root = JSONObject(backup)
-        if (root.optString("format") != "notoora-backup") {
-            throw IllegalArgumentException("This is not a Notoora backup file.")
+        if (root.optString("format") != "paperya-backup") {
+            throw IllegalArgumentException("This is not a Paperya backup file.")
         }
         val rows = root.optJSONArray("notes")
             ?: throw IllegalArgumentException("The backup file does not contain notes.")
@@ -112,7 +112,7 @@ class NotesDatabase(context: Context) : SQLiteOpenHelper(context, "notoora.db", 
             while (cursor.moveToNext()) rows.put(cursor.toNote().toJson())
         }
         return JSONObject()
-            .put("format", "notoora-backup")
+            .put("format", "paperya-backup")
             .put("schemaVersion", 2)
             .put("exportedAt", System.currentTimeMillis())
             .put("notes", rows)

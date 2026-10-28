@@ -4,10 +4,10 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@drawable/ic_notoora"
-        android:roundIcon="@drawable/ic_notoora"
+        android:icon="@drawable/ic_paperya"
+        android:roundIcon="@drawable/ic_paperya"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Notoora">
+        android:theme="@style/Theme.Paperya">
         <activity
             android:name=".MainActivity"
             android:exported="true"

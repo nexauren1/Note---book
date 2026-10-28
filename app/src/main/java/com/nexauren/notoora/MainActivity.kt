@@ -1,4 +1,4 @@
-package com.nexauren.notoora
+package com.nexauren.paperya
 
 import android.app.Activity
 import android.os.Bundle
@@ -18,15 +18,15 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
-import com.nexauren.notoora.data.DriveBackupClient
-import com.nexauren.notoora.data.Note
-import com.nexauren.notoora.data.NoteFilter
-import com.nexauren.notoora.data.NotesDatabase
-import com.nexauren.notoora.ui.HomeScreen
-import com.nexauren.notoora.ui.NoteAction
-import com.nexauren.notoora.ui.NoteEditorScreen
-import com.nexauren.notoora.ui.NotooraTheme
-import com.nexauren.notoora.ui.SettingsScreen
+import com.nexauren.paperya.data.DriveBackupClient
+import com.nexauren.paperya.data.Note
+import com.nexauren.paperya.data.NoteFilter
+import com.nexauren.paperya.data.NotesDatabase
+import com.nexauren.paperya.ui.HomeScreen
+import com.nexauren.paperya.ui.NoteAction
+import com.nexauren.paperya.ui.NoteEditorScreen
+import com.nexauren.paperya.ui.PaperyaTheme
+import com.nexauren.paperya.ui.SettingsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,14 +93,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         database = NotesDatabase(applicationContext)
         setContent {
-            NotooraRoot(
+            PaperyaRoot(
                 database = database,
                 refreshCounter = refreshCounter,
                 driveStatus = driveStatus,
                 onRefresh = { refreshCounter++ },
                 onExport = {
                     pendingExportJson = database.exportBackupJson()
-                    exportBackupLauncher.launch("Notoora-backup.json")
+                    exportBackupLauncher.launch("Paperya-backup.json")
                 },
                 onImport = { importBackupLauncher.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
                 onDriveSync = { requestDriveAuthorization(DriveOperation.SYNC) },
@@ -145,12 +145,12 @@ class MainActivity : ComponentActivity() {
                             val remote = DriveBackupClient.downloadBackup(token)
                             if (remote != null) database.mergeBackupJson(remote)
                             DriveBackupClient.uploadBackup(token, database.exportBackupJson())
-                            if (remote == null) "Created your first Notoora backup in Drive"
+                            if (remote == null) "Created your first Paperya backup in Drive"
                             else "Drive sync completed; local and cloud notes were merged"
                         }
                         DriveOperation.RESTORE -> {
                             val remote = DriveBackupClient.downloadBackup(token)
-                                ?: throw IllegalStateException("No Notoora Backup.json file was found in this Drive account.")
+                                ?: throw IllegalStateException("No Paperya Backup.json file was found in this Drive account.")
                             val changed = database.mergeBackupJson(remote)
                             "Merged " + changed + " notes from Google Drive"
                         }
@@ -166,7 +166,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun NotooraRoot(
+private fun PaperyaRoot(
     database: NotesDatabase,
     refreshCounter: Int,
     driveStatus: String,
@@ -181,7 +181,7 @@ private fun NotooraRoot(
     var currentFilter by androidx.compose.runtime.remember { mutableStateOf(NoteFilter.ALL) }
     var search by androidx.compose.runtime.remember { mutableStateOf("") }
     var appThemeId by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
-    NotooraTheme(paletteId = selectedNote?.themeId ?: appThemeId) {
+    PaperyaTheme(paletteId = selectedNote?.themeId ?: appThemeId) {
         Surface(Modifier.fillMaxSize()) {
             when {
                 selectedNote != null -> {

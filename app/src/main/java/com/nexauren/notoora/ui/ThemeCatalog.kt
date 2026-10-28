@@ -1,4 +1,4 @@
-package com.nexauren.notoora.ui
+package com.nexauren.paperya.ui
 
 import androidx.compose.ui.graphics.Color
 

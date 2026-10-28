@@ -1,4 +1,4 @@
-package com.nexauren.notoora.data
+package com.nexauren.paperya.data
 
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -10,7 +10,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 object DriveBackupClient {
-    private const val BACKUP_NAME = "Notoora Backup.json"
+    private const val BACKUP_NAME = "Paperya Backup.json"
     private val http = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -65,7 +65,7 @@ object DriveBackupClient {
     }
 
     private fun createBackup(token: String, json: String) {
-        val boundary = "notoora-" + UUID.randomUUID().toString()
+        val boundary = "paperya-" + UUID.randomUUID().toString()
         val metadata = JSONObject().put("name", BACKUP_NAME).put("mimeType", "application/json").toString()
         val bodyText = "--" + boundary + "\r\n" +
             "Content-Type: application/json; charset=UTF-8\r\n\r\n" +

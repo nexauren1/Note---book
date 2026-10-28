@@ -1,4 +1,4 @@
-package com.nexauren.notoora.ui
+package com.nexauren.paperya.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +64,7 @@ fun SettingsScreen(
                     Icon(Icons.Default.FileDownload, null, tint = MaterialTheme.colorScheme.primary)
                     Text("Portable backup", modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
-                Text("Export a Notoora JSON backup or import one later. Import merges notes and keeps the newest version of each note.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Export a Paperya JSON backup or import one later. Import merges notes and keeps the newest version of each note.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = onExport, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.FileDownload, null)
                     Text("  Export notes")
@@ -82,7 +82,7 @@ fun SettingsScreen(
                     Icon(Icons.Default.CloudSync, null, tint = MaterialTheme.colorScheme.primary)
                     Text("Google Drive", modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
-                Text("Use your Google account to merge the latest changes and keep one Notoora backup file in Drive.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Use your Google account to merge the latest changes and keep one Paperya backup file in Drive.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(driveStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 Button(onClick = onDriveSync, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.CloudSync, null)

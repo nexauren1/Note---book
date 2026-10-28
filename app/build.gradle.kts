@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.nexauren.notoora"
+    namespace = "com.nexauren.paperya"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.nexauren.notoora"
+        applicationId = "com.nexauren.paperya"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

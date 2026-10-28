@@ -1,4 +1,4 @@
-package com.nexauren.notoora.ui
+package com.nexauren.paperya.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -66,7 +66,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.nexauren.notoora.data.Note
+import com.nexauren.paperya.data.Note
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import java.text.SimpleDateFormat

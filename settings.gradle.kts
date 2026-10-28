@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Notoora"
+rootProject.name = "Paperya"
 include(":app")

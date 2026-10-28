@@ -1,4 +1,4 @@
-package com.nexauren.notoora.data
+package com.nexauren.paperya.data
 
 import org.json.JSONObject
 import java.util.UUID

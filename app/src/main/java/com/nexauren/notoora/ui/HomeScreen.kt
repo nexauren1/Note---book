@@ -1,4 +1,4 @@
-package com.nexauren.notoora.ui
+package com.nexauren.paperya.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,8 +56,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.nexauren.notoora.data.Note
-import com.nexauren.notoora.data.NoteFilter
+import com.nexauren.paperya.data.Note
+import com.nexauren.paperya.data.NoteFilter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -102,7 +102,7 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.width(11.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Notoora", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text("Paperya", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Text("Your ideas, beautifully kept", style = MaterialTheme.typography.bodySmall, color = palette.onSurfaceVariant)
                 }
                 IconButton(onClick = onSettings) {
